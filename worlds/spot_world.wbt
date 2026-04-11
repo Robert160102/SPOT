@@ -1,6 +1,7 @@
 #VRML_SIM R2025a utf8
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/boston_dynamics/spot/protos/Spot.proto"
 WorldInfo {
 }
 Viewpoint {
@@ -10,4 +11,8 @@ Viewpoint {
 TexturedBackground {
 }
 TexturedBackgroundLight {
+}
+Spot {
+  translation 0 0 0.626
+  controller "<none>"
 }
