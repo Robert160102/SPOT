@@ -4,14 +4,16 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/trees/protos/SimpleTree.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/containers/protos/PlasticFruitBox.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/garden/protos/TableWithUmbrella.proto"
 
 WorldInfo {
   title "Parking Zones - Spot Navigation"
   coordinateSystem "NUE"
 }
 Viewpoint {
-  orientation 0.594671379168043 0.4767114640708688 0.6473887014937675 4.344733242677844
-  position -13.302066822610328 15.738646034821025 -140.29425674710114
+  orientation -0.7209886534770867 0.6896231745336787 -0.06778818999935592 2.9938793262059322
+  position -53.929285670266815 78.12905182140281 19.28824180510534
 }
 TexturedBackground {
 }
@@ -516,7 +518,7 @@ Solid {
   name "ze5"
 }
 Solid {
-  translation -45 0.008 28
+  translation -45 0.003865 28
   children [
     Shape {
       appearance PBRAppearance {
@@ -2602,31 +2604,103 @@ Solid {
   name "fcb"
 }
 Spot {
-  hidden translation_18 -0.0528 0.0006 0
-  hidden rotation_18 0 0 1 4.794370286978928e-05
-  hidden translation_19 0 -0.00053 0
-  hidden rotation_19 1 0 0 0.1487878742702099
-  hidden translation_21 -0.1122 -0.319729 0.182338
-  hidden rotation_21 1 0 0 6.4770533019384965e-06
-  hidden translation_22 0.0528 0.0006 0
-  hidden rotation_22 0 0 -1 0.0001087401515389806
-  hidden translation_23 0 -0.00053 0
-  hidden rotation_23 1 0 0 0.1506452901936639
-  hidden translation_25 0.1122 -0.319729 0.182338
-  hidden rotation_25 1 0 0 3.053683878274473e-06
-  hidden translation_26 -0.0528 0.0006 0
-  hidden rotation_26 0 0 -1 0.00012707646316108278
-  hidden translation_27 0 -0.00053 0
-  hidden rotation_27 1 0 0 0.008897285631983809
-  hidden translation_29 -0.1122 -0.319729 0.182338
-  hidden rotation_29 1 0 0 4.0800380730036706e-05
-  hidden translation_30 0.0528 0.0006 0
-  hidden rotation_30 0 0 1 5.771528864643046e-05
-  hidden translation_31 0 -0.00053 0
-  hidden rotation_31 -1 0 0 9.110061536492168e-05
-  hidden translation_33 0.1122 -0.319729 0.182338
-  hidden rotation_33 1 0 0 9.908947276054607e-06
-  translation 0.08045831221583467 0.5789490020185079 -69.68219914302479
-  rotation -0.599792418256358 -0.5174166584227563 -0.6103515844075601 2.1839064333857423
+  hidden position_0_0 -3.799108844757241e-05
+  hidden position_0_1 5.3343428973688576e-05
+  hidden position_0_2 -4.4595197716053655e-05
+  hidden position_0_3 6.642220928478543e-05
+  hidden rotation_18 0 0 -1 4.399452707111753e-06
+  hidden position_18_0 3.23902907196381e-05
+  hidden rotation_19 1 0 0 3.239028496675251e-05
+  hidden position_19_1 0.00017949992433978335
+  hidden rotation_21 0.9999999999999999 0 0 0.00017949992466786946
+  hidden rotation_22 0 0 -0.9999999999999999 5.987882881352111e-05
+  hidden position_22_0 5.614092469544508e-05
+  hidden rotation_23 1 0 0 5.614092324704961e-05
+  hidden position_23_1 8.024575264049762e-05
+  hidden rotation_25 1 0 0 8.024575119702542e-05
+  hidden rotation_26 0 0 -1 0.00017529324240233015
+  hidden position_26_0 3.411104087669751e-06
+  hidden rotation_27 0.9999999999999999 0 0 3.4111618953802475e-06
+  hidden position_27_1 0.00023028223002343894
+  hidden rotation_29 0.9999999999999999 0 0 0.0002302822308787723
+  hidden rotation_30 0 0 1 0.00013388574838491067
+  hidden position_30_0 9.783954769693637e-06
+  hidden rotation_31 1 0 0 9.783971265218996e-06
+  hidden position_31_1 9.680296842557313e-05
+  hidden rotation_33 1 0 0 9.680296663087936e-05
+  translation 0.08290694282107386 0.5824984694291387 -69.68908399062771
+  rotation 0.6024274838009117 0.5184298903024849 0.6068867897740531 -2.1934375690137893
   controller "<none>"
+}
+Robot {
+  children [
+    Pose {
+      translation -52.99 25 26.99
+      rotation 0.5773489358556708 -0.5773509358554485 -0.5773509358554485 2.0944
+      children [
+        Camera {
+          name "cam_parking_A"
+          fieldOfView 1.2
+          width 640
+          height 480
+          near 0.5
+          far 50
+        }
+      ]
+    }
+    Pose {
+      translation 43.89 25 23.98
+      rotation 0 0 -1 1.5708
+      children [
+        Camera {
+          name "cam_parking_B"
+          fieldOfView 1.2
+          width 640
+          height 480
+          near 0.5
+          far 50
+        }
+      ]
+    }
+    Pose {
+      translation -18 20 -38.99
+      rotation 0 0 -1 1.5708
+      children [
+        Camera {
+          name "cam_parking_CL"
+          fieldOfView 1.2
+          width 640
+          height 480
+          near 0.5
+          far 50
+        }
+      ]
+    }
+    Pose {
+      translation 18 20 -38.76
+      rotation 0 0 -1 1.5708
+      children [
+        Camera {
+          name "cam_parking_CR"
+          fieldOfView 1.2
+          width 640
+          height 480
+          near 0.5
+          far 50
+        }
+      ]
+    }
+  ]
+  name "parking_supervisor"
+  controller "parking_controller"
+  supervisor TRUE
+  window "dashboard"
+}
+PlasticFruitBox {
+  translation -42.37 0.3 21.74
+  rotation 0.5773509358560258 -0.577349935856137 -0.577349935856137 -2.094395307179586
+}
+TableWithUmbrella {
+  translation 10.13 -0.939942 -31.4
+  rotation 1 0 0 -1.5707953071795862
 }

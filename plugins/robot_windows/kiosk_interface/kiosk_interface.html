@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking Kiosk · Dron Guía</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            user-select: none;
+        }
+        .parking-zone {
+            border: 8px solid #1f2937;
+            background-color: #ffffff;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            position: relative;
+            border-radius: 32px;
+            overflow: hidden;
+        }
+        .parking-pattern {
+            background-image: repeating-linear-gradient(0deg, transparent, transparent 40px, #f3f4f6 40px, #f3f4f6 46px);
+            opacity: 0.8;
+        }
+        .zone-selected {
+            background-color: #22c55e !important;
+            border-color: #166534 !important;
+            transform: scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+        .zone-selected .zone-id, .zone-selected .lucide {
+            color: white !important;
+        }
+        /* Zona desactivada (sin plazas libres) */
+        .zone-disabled {
+            opacity: 0.45;
+            filter: grayscale(0.7);
+            cursor: not-allowed !important;
+            pointer-events: none;
+            border-color: #9ca3af !important;
+        }
+        .huge-icon {
+            width: clamp(5rem, 10vw, 10rem);
+            height: clamp(5rem, 10vw, 10rem);
+            filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.1));
+            transition: all 0.2s;
+        }
+        .kiosk-btn:active {
+            transform: scale(0.92);
+        }
+        #modal-overlay {
+            backdrop-filter: blur(16px);
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+        .occupancy-badge {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            z-index: 20;
+            font-size: 2.5rem;
+            font-weight: 800;
+            padding: 0.5rem 1.5rem;
+            border-radius: 2rem;
+            background: rgba(255,255,255,0.9);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .occupancy-low { color: #16a34a; }
+        .occupancy-medium { color: #ca8a04; }
+        .occupancy-high { color: #dc2626; }
+
+        /* animación flotante para el dron */
+        .drone-float {
+            animation: float 2.2s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+</head>
+<body class="h-screen w-full bg-white text-gray-900 overflow-hidden flex flex-row">
+
+    <main class="w-3/4 h-full relative flex items-center justify-center bg-gray-50 p-8">
+        <div id="status-indicator" class="absolute top-8 left-8 p-6 rounded-full bg-white border-4 shadow-xl hidden transition-all z-20">
+            <i id="status-icon" data-lucide="filter" class="w-16 h-16"></i>
+        </div>
+        <div id="map-container" class="w-full h-full max-w-6xl max-h-[900px] grid grid-cols-2 grid-rows-2 gap-8 p-8"></div>
+    </main>
+
+    <aside class="w-1/4 h-full border-l-8 border-gray-800 flex flex-col bg-white">
+        <button id="btn-electric" class="kiosk-btn flex-1 flex items-center justify-center border-b-8 border-gray-800 transition-colors hover:bg-yellow-50 active:bg-yellow-100 text-gray-800">
+            <i data-lucide="zap" class="huge-icon"></i>
+        </button>
+        <button id="btn-handicap" class="kiosk-btn flex-1 flex items-center justify-center border-b-8 border-gray-800 transition-colors hover:bg-blue-50 active:bg-blue-100 text-gray-800">
+            <i data-lucide="accessibility" class="huge-icon"></i>
+        </button>
+        <button id="btn-confirm" class="kiosk-btn flex-1 flex items-center justify-center bg-gray-100 transition-colors text-gray-300">
+            <i data-lucide="check-circle-2" class="huge-icon"></i>
+        </button>
+    </aside>
+
+    <!-- Modal confirmación · ahora con dron guía -->
+    <div id="modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="bg-white border-8 border-sky-400 p-16 rounded-[5rem] shadow-2xl flex flex-col items-center gap-8 max-w-2xl w-full">
+            <!-- Dron animado + flecha -->
+            <div class="flex items-center justify-center gap-8 text-sky-500">
+                <i data-lucide="drone" class="w-44 h-44 drone-float"></i>
+                <i data-lucide="move-right" class="w-24 h-24"></i>
+            </div>
+            <!-- Zona destino -->
+            <div id="modal-zone-id" class="text-[10rem] font-black text-gray-800 leading-none">A</div>
+            <!-- Mensaje sutil -->
+            <div class="flex items-center gap-3 text-gray-600">
+                <i data-lucide="navigation" class="w-12 h-12"></i>
+                <span class="text-4xl font-medium tracking-wide">Siga al dron</span>
+            </div>
+            <!-- Botón de cierre / impresión simbólica -->
+            <button id="btn-close-modal" class="mt-6 bg-gray-800 text-white rounded-[3rem] p-8 hover:bg-gray-900 active:scale-95 transition-all w-full flex justify-center items-center gap-6">
+                <i data-lucide="check-circle-2" class="w-20 h-20"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast de advertencia (sin cambios) -->
+    <div id="toast-warning" class="fixed top-1/2 left-[37.5%] -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white p-16 rounded-full shadow-2xl transform transition-all duration-300 scale-0 opacity-0 z-50 pointer-events-none">
+        <i data-lucide="alert-triangle" class="w-40 h-40"></i>
+    </div>
+
+    <script>
+        (function() {
+            // Mapeo de IDs de cámara a letras de zona
+            const cameraToZone = {
+                'cam_parking_A': 'A',
+                'cam_parking_B': 'B',
+                'cam_parking_CL': 'C',
+                'cam_parking_CR': 'D'
+            };
+
+            const zonesData = [
+                { id: 'A', features: ['normal'] },
+                { id: 'B', features: ['electric', 'handicap'] },
+                { id: 'C', features: ['handicap'] },
+                { id: 'D', features: ['electric'] }
+            ];
+
+            let occupancy = {
+                A: { free: 0, total: 0 },
+                B: { free: 0, total: 0 },
+                C: { free: 0, total: 0 },
+                D: { free: 0, total: 0 }
+            };
+
+            let selectedZoneId = null;
+            let activeFilter = null;
+
+            const mapContainer = document.getElementById('map-container');
+            const btnConfirm = document.getElementById('btn-confirm');
+            const btnElectric = document.getElementById('btn-electric');
+            const btnHandicap = document.getElementById('btn-handicap');
+            const statusIndicator = document.getElementById('status-indicator');
+            const statusIcon = document.getElementById('status-icon');
+
+            function getOccupancyColorClass(free, total) {
+                if (total === 0) return 'text-gray-400';
+                const ratio = free / total;
+                if (ratio > 0.5) return 'occupancy-low';
+                if (ratio > 0.2) return 'occupancy-medium';
+                return 'occupancy-high';
+            }
+
+            function renderMap() {
+                mapContainer.innerHTML = '';
+                zonesData.forEach(zone => {
+                    const occ = occupancy[zone.id] || { free: 0, total: 0 };
+                    const free = occ.free;
+                    const total = occ.total;
+                    const colorClass = getOccupancyColorClass(free, total);
+                    const isSelected = selectedZoneId === zone.id;
+                    const isDisabled = free === 0;          // 🚫 Zona sin plazas libres → desactivada
+                    
+                    let isFaded = false;
+                    if (activeFilter && !zone.features.includes(activeFilter)) {
+                        isFaded = true;
+                    }
+
+                    const zoneEl = document.createElement('div');
+                    zoneEl.className = `parking-zone flex flex-col items-center justify-center 
+                                        ${isSelected ? 'zone-selected' : ''}
+                                        ${isFaded ? 'opacity-20 bg-gray-200' : ''}
+                                        ${isDisabled ? 'zone-disabled' : ''}`;
+                    
+                    // fondos de color solo si no está seleccionado, no faded ni deshabilitado
+                    if (!isSelected && !isFaded && !isDisabled) {
+                        if (zone.features.includes('electric') && zone.features.includes('handicap')) {
+                            zoneEl.classList.add('bg-gradient-to-br', 'from-yellow-50', 'to-blue-50');
+                        } else if (zone.features.includes('electric')) {
+                            zoneEl.classList.add('bg-yellow-50');
+                        } else if (zone.features.includes('handicap')) {
+                            zoneEl.classList.add('bg-blue-50');
+                        }
+                    }
+
+                    let iconsHtml = '';
+                    if (zone.features.includes('electric')) iconsHtml += '<i data-lucide="zap" class="w-12 h-12"></i>';
+                    if (zone.features.includes('handicap')) iconsHtml += '<i data-lucide="accessibility" class="w-12 h-12"></i>';
+
+                    zoneEl.innerHTML = `
+                        <div class="absolute inset-0 parking-pattern z-0"></div>
+                        <div class="occupancy-badge ${colorClass}">
+                            ${free}/${total}
+                        </div>
+                        <div class="absolute top-6 right-6 flex gap-3 z-10 text-gray-600">
+                            ${iconsHtml}
+                        </div>
+                        <span class="zone-id text-[14rem] font-black text-gray-800 z-10 leading-none">${zone.id}</span>
+                        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center justify-center gap-6 z-10 text-gray-400 opacity-60">
+                            <i data-lucide="car" class="w-12 h-12"></i>
+                            <i data-lucide="car" class="w-12 h-12"></i>
+                            <i data-lucide="car" class="w-12 h-12"></i>
+                        </div>
+                    `;
+
+                    // Solo se puede hacer clic si la zona no está desactivada (free>0) y no está faded
+                    zoneEl.addEventListener('click', () => {
+                        if (isFaded) return;
+                        if (isDisabled) return;      // redundante con pointer-events, pero seguro
+                        selectedZoneId = selectedZoneId === zone.id ? null : zone.id;
+                        updateUI();
+                    });
+
+                    mapContainer.appendChild(zoneEl);
+                });
+                lucide.createIcons();
+            }
+
+            function updateUI() {
+                renderMap();
+                
+                // Actualizar estilo del botón confirmar
+                if (selectedZoneId) {
+                    btnConfirm.classList.remove('bg-gray-100', 'text-gray-300');
+                    btnConfirm.classList.add('bg-green-400', 'hover:bg-green-500', 'text-white');
+                } else {
+                    btnConfirm.classList.add('bg-gray-100', 'text-gray-300');
+                    btnConfirm.classList.remove('bg-green-400', 'hover:bg-green-500', 'text-white');
+                }
+
+                // Filtros activos
+                btnElectric.classList.toggle('bg-yellow-200', activeFilter === 'electric');
+                btnElectric.classList.toggle('text-yellow-700', activeFilter === 'electric');
+                btnHandicap.classList.toggle('bg-blue-200', activeFilter === 'handicap');
+                btnHandicap.classList.toggle('text-blue-700', activeFilter === 'handicap');
+
+                if (activeFilter) {
+                    statusIndicator.classList.remove('hidden');
+                    statusIndicator.className = `absolute top-8 left-8 p-6 rounded-full border-4 shadow-xl z-20 ${activeFilter === 'electric' ? 'bg-yellow-100 border-yellow-500 text-yellow-600' : 'bg-blue-100 border-blue-500 text-blue-600'}`;
+                    statusIcon.setAttribute('data-lucide', activeFilter === 'electric' ? 'zap' : 'accessibility');
+                    lucide.createIcons({ attrs: { class: "w-16 h-16" } });
+                } else {
+                    statusIndicator.classList.add('hidden');
+                }
+            }
+
+            function showWarning() {
+                const toast = document.getElementById('toast-warning');
+                toast.classList.remove('scale-0', 'opacity-0');
+                toast.classList.add('scale-100', 'opacity-100', 'animate-bounce');
+                setTimeout(() => {
+                    toast.classList.add('scale-0', 'opacity-0');
+                    toast.classList.remove('scale-100', 'opacity-100', 'animate-bounce');
+                }, 1200);
+            }
+
+            // Manejador de mensajes desde el padre (Webots)
+            window.handleWebotsMessage = function(message) {
+                try {
+                    const data = JSON.parse(message);
+                    // Resetear occupancy
+                    for (let zone in occupancy) {
+                        occupancy[zone] = { free: 0, total: 0 };
+                    }
+                    for (const camId in data) {
+                        if (camId.startsWith('_image')) continue;
+                        const zoneLetter = cameraToZone[camId];
+                        if (!zoneLetter) continue;
+                        const spots = data[camId];
+                        if (Array.isArray(spots)) {
+                            const total = spots.length;
+                            const free = spots.filter(item => item[1] === 'free').length;
+                            occupancy[zoneLetter] = { free, total };
+                        }
+                    }
+
+                    // 🔄 Si la zona seleccionada se queda sin plazas, deseleccionar automáticamente
+                    if (selectedZoneId && occupancy[selectedZoneId]?.free === 0) {
+                        selectedZoneId = null;
+                    }
+
+                    renderMap();
+                    
+                    // Asegurar estilo del botón confirmar
+                    if (selectedZoneId) {
+                        btnConfirm.classList.remove('bg-gray-100', 'text-gray-300');
+                        btnConfirm.classList.add('bg-green-400', 'hover:bg-green-500', 'text-white');
+                    } else {
+                        btnConfirm.classList.add('bg-gray-100', 'text-gray-300');
+                        btnConfirm.classList.remove('bg-green-400', 'hover:bg-green-500', 'text-white');
+                    }
+                } catch (e) {
+                    console.error('Error procesando mensaje:', e);
+                }
+            };
+
+            window.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'webots') {
+                    window.handleWebotsMessage(event.data.data);
+                }
+            });
+
+            window.sendToWebots = function(msg) {
+                window.parent.postMessage({type: 'robotWindow', data: msg}, '*');
+            };
+
+            // Botones de filtro
+            btnElectric.addEventListener('click', () => {
+                activeFilter = activeFilter === 'electric' ? null : 'electric';
+                selectedZoneId = null;   // limpiar selección al cambiar filtro
+                updateUI();
+            });
+            btnHandicap.addEventListener('click', () => {
+                activeFilter = activeFilter === 'handicap' ? null : 'handicap';
+                selectedZoneId = null;
+                updateUI();
+            });
+
+            // CONFIRMAR: ahora verifica que haya plazas libres
+            btnConfirm.addEventListener('click', () => {
+                if (!selectedZoneId) {
+                    showWarning();
+                    return;
+                }
+                // Comprobación extra: ¿la zona seleccionada aún tiene plazas?
+                const occ = occupancy[selectedZoneId];
+                if (!occ || occ.free === 0) {
+                    showWarning();
+                    selectedZoneId = null;
+                    updateUI();
+                    return;
+                }
+
+                // Mostrar modal con dron guía
+                document.getElementById('modal-zone-id').innerText = selectedZoneId;
+                document.getElementById('modal-overlay').classList.remove('hidden');
+                
+                // (Opcional) Refrescar íconos dentro del modal
+                lucide.createIcons();
+            });
+
+            // Cerrar modal y resetear (mantiene comportamiento original)
+            document.getElementById('btn-close-modal').addEventListener('click', () => {
+                document.getElementById('modal-overlay').classList.add('hidden');
+                selectedZoneId = null;
+                activeFilter = null;      // vuelve a mostrar todas las zonas (limpio)
+                updateUI();
+            });
+
+            // Inicialización
+            window.addEventListener('load', () => {
+                updateUI();
+                window.sendToWebots('ready');
+            });
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de Parking - 4 Cámaras</title>
+    <style>
+        /* (mantén todo el CSS que ya tenías) */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #1a1e24;
+            color: #e0e0e0;
+            padding: 10px;
+            min-width: 1300px;
+            min-height: 700px;
+        }
+        h1 { text-align: center; margin-bottom: 10px; color: #fff; }
+        .mosaic {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .cam-panel {
+            background: #0c0f12;
+            border-radius: 8px;
+            padding: 8px;
+            border: 1px solid #3a4a5a;
+        }
+        .cam-title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #b0c4de;
+        }
+        .cam-view {
+            position: relative;
+            width: 640px;
+            height: 480px;
+            background: #000;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+        .cam-view canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        .overlay-canvas { pointer-events: none; }
+        .status-bar {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 5px;
+            font-size: 14px;
+            background: #1e242c;
+            padding: 4px;
+            border-radius: 4px;
+        }
+        .summary { font-weight: bold; }
+        .free { color: #4caf50; }
+        .occupied { color: #f44336; }
+        .debug-info {
+            text-align: center;
+            margin-top: 10px;
+            color: #7f8c8d;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+<h1>🚗 MONITOR DE PARKING - 4 CÁMARAS</h1>
+
+<div class="mosaic">
+    <!-- Cámara A -->
+    <div class="cam-panel">
+        <div class="cam-title">Zona A (Noroeste)</div>
+        <div class="cam-view" id="view-A">
+            <canvas id="cam-A-image" width="640" height="480"></canvas>
+            <canvas id="cam-A-overlay" width="640" height="480" class="overlay-canvas"></canvas>
+        </div>
+        <div class="status-bar">
+            <span id="summary-A" class="summary">Free: --/--</span>
+            <span>🟢 <span id="free-A">0</span>  🔴 <span id="occ-A">0</span></span>
+        </div>
+    </div>
+    <!-- Cámara B -->
+    <div class="cam-panel">
+        <div class="cam-title">Zona B (Noreste)</div>
+        <div class="cam-view" id="view-B">
+            <canvas id="cam-B-image" width="640" height="480"></canvas>
+            <canvas id="cam-B-overlay" width="640" height="480" class="overlay-canvas"></canvas>
+        </div>
+        <div class="status-bar">
+            <span id="summary-B" class="summary">Free: --/--</span>
+            <span>🟢 <span id="free-B">0</span>  🔴 <span id="occ-B">0</span></span>
+        </div>
+    </div>
+    <!-- Cámara CL -->
+    <div class="cam-panel">
+        <div class="cam-title">Zona C Izquierda (Suroeste)</div>
+        <div class="cam-view" id="view-CL">
+            <canvas id="cam-CL-image" width="640" height="480"></canvas>
+            <canvas id="cam-CL-overlay" width="640" height="480" class="overlay-canvas"></canvas>
+        </div>
+        <div class="status-bar">
+            <span id="summary-CL" class="summary">Free: --/--</span>
+            <span>🟢 <span id="free-CL">0</span>  🔴 <span id="occ-CL">0</span></span>
+        </div>
+    </div>
+    <!-- Cámara CR -->
+    <div class="cam-panel">
+        <div class="cam-title">Zona C Derecha (Sureste)</div>
+        <div class="cam-view" id="view-CR">
+            <canvas id="cam-CR-image" width="640" height="480"></canvas>
+            <canvas id="cam-CR-overlay" width="640" height="480" class="overlay-canvas"></canvas>
+        </div>
+        <div class="status-bar">
+            <span id="summary-CR" class="summary">Free: --/--</span>
+            <span>🟢 <span id="free-CR">0</span>  🔴 <span id="occ-CR">0</span></span>
+        </div>
+    </div>
+</div>
+
+<div class="debug-info" id="debug-info">Ventana lista. Esperando datos...</div>
+
+<script>
+    (function() {
+        // --- CONFIGURACIÓN INCRUSTADA (IDs GLOBALES CORRECTOS) ---
+        const CAMERAS_CONFIG = {
+            cam_parking_A: {
+                spot_width: 107, spot_height: 48,
+                spots: [
+                    {x:26,y:74},{x:172,y:74},{x:171,y:18},{x:26,y:18},{x:26,y:131},{x:169,y:132},{x:24,y:188},{x:173,y:187},
+                    {x:171,y:242},{x:24,y:243},{x:171,y:299},{x:25,y:299},{x:172,y:355},{x:25,y:355},{x:26,y:411},{x:172,y:411},
+                    {x:363,y:18},{x:509,y:17},{x:364,y:74},{x:509,y:74},{x:364,y:130},{x:509,y:131},{x:364,y:186},{x:509,y:187},
+                    {x:363,y:243},{x:508,y:242},{x:364,y:299},{x:509,y:298},{x:365,y:356},{x:510,y:355},{x:363,y:411},{x:509,y:411}
+                ]
+            },
+            cam_parking_B: {
+                spot_width: 48, spot_height: 107,
+                spots: [
+                    {x:95,y:373},{x:154,y:374},{x:210,y:373},{x:265,y:373},{x:321,y:372},{x:377,y:373},{x:432,y:372},{x:490,y:372},
+                    {x:97,y:191},{x:153,y:190},{x:210,y:189},{x:265,y:188},{x:323,y:187},{x:378,y:187},{x:434,y:189},{x:490,y:187},
+                    {x:489,y:0},{x:434,y:0},{x:376,y:2},{x:321,y:3},{x:264,y:1},{x:208,y:0},{x:154,y:0},{x:95,y:1}
+                ]
+            },
+            cam_parking_CL: {
+                spot_width: 128, spot_height: 63,
+                spots: [
+                    {x:68,y:32},{x:69,y:102},{x:69,y:172},{x:69,y:243},{x:69,y:313},{x:71,y:383},
+                    {x:393,y:32},{x:393,y:102},{x:393,y:173},{x:393,y:244},{x:393,y:314},{x:391,y:384}
+                ]
+            },
+            cam_parking_CR: {
+                spot_width: 128, spot_height: 63,
+                spots: [
+                    {x:115,y:37},{x:115,y:108},{x:114,y:178},{x:115,y:248},{x:115,y:318},{x:116,y:389},
+                    {x:439,y:389},{x:439,y:318},{x:441,y:247},{x:440,y:178},{x:438,y:108},{x:440,y:37}
+                ]
+            }
+        };
+
+        const cams = ['cam_parking_A', 'cam_parking_B', 'cam_parking_CL', 'cam_parking_CR'];
+        const spotConfigs = {};
+        const spotStatus = {};
+        const contexts = {};
+
+        let globalId = 1;
+        cams.forEach(camId => {
+            const cfg = CAMERAS_CONFIG[camId];
+            const spots = [];
+            
+            cfg.spots.forEach((spot) => {
+                spots.push({
+                    id: globalId++,
+                    x: spot.x,
+                    y: spot.y,
+                    width: cfg.spot_width,
+                    height: cfg.spot_height
+                });
+            });
+            
+            spotConfigs[camId] = spots;
+            spotStatus[camId] = new Map();
+            
+            const suffix = camId.replace('cam_parking_', '');
+            contexts[camId] = {
+                image: document.getElementById(`cam-${suffix}-image`),
+                overlay: document.getElementById(`cam-${suffix}-overlay`),
+                summary: document.getElementById(`summary-${suffix}`),
+                freeSpan: document.getElementById(`free-${suffix}`),
+                occSpan: document.getElementById(`occ-${suffix}`)
+            };
+        });
+
+        const debugDiv = document.getElementById('debug-info');
+
+        function drawOverlay(camId) {
+            const ctx = contexts[camId].overlay.getContext('2d');
+            const configs = spotConfigs[camId];
+            const statusMap = spotStatus[camId];
+            const canvas = contexts[camId].overlay;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (!configs) return;
+            
+            let freeCount = 0;
+            for (const spot of configs) {
+                const status = statusMap.get(spot.id) || 'free';
+                const color = status === 'free' ? '#00FF00' : '#FF0000';
+                ctx.strokeStyle = color;
+                ctx.lineWidth = status === 'free' ? 3 : 2;
+                ctx.strokeRect(spot.x, spot.y, spot.width, spot.height);
+                ctx.font = 'bold 14px Arial';
+                ctx.fillStyle = color;
+                ctx.shadowColor = '#000';
+                ctx.shadowBlur = 4;
+                ctx.fillText(spot.id, spot.x + 5, spot.y + spot.height - 5);
+                ctx.shadowBlur = 0;
+                if (status === 'free') freeCount++;
+            }
+            const total = configs.length;
+            const occCount = total - freeCount;
+            contexts[camId].summary.textContent = `Free: ${freeCount}/${total}`;
+            contexts[camId].freeSpan.textContent = freeCount;
+            contexts[camId].occSpan.textContent = occCount;
+        }
+
+        function updateAllOverlays() {
+            cams.forEach(cam => drawOverlay(cam));
+        }
+
+        // Función que será llamada desde el padre (dashboard)
+        window.handleWebotsMessage = function(message) {
+            try {
+                const data = JSON.parse(message);
+                const timestamp = new Date().toLocaleTimeString();
+                debugDiv.textContent = `Último mensaje: ${timestamp}`;
+
+                cams.forEach(camId => {
+                    const imgKey = `_image_${camId}`;
+                    if (data[imgKey] && contexts[camId]) {
+                        const img = new Image();
+                        img.onload = () => {
+                            const ctx = contexts[camId].image.getContext('2d');
+                            ctx.clearRect(0, 0, 640, 480);
+                            ctx.drawImage(img, 0, 0, 640, 480);
+                            drawOverlay(camId);
+                        };
+                        img.src = 'data:image/jpeg;base64,' + data[imgKey];
+                        delete data[imgKey];
+                    }
+
+                    const spotsData = data[camId];
+                    if (spotsData && Array.isArray(spotsData)) {
+                        const statusMap = spotStatus[camId];
+                        statusMap.clear();
+                        for (const item of spotsData) {
+                            if (Array.isArray(item) && item.length === 2) {
+                                statusMap.set(item[0], item[1]);
+                            }
+                        }
+                    }
+                });
+
+                updateAllOverlays();
+            } catch (e) {
+                console.error('Error parseando mensaje:', e);
+                debugDiv.textContent = 'Error en el parseo del mensaje.';
+            }
+        };
+
+        // Escuchar mensajes del padre
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'webots') {
+                window.handleWebotsMessage(event.data.data);
+            }
+        });
+
+        // Función para enviar al padre (si se necesita)
+        window.sendToWebots = function(msg) {
+            window.parent.postMessage({type: 'robotWindow', data: msg}, '*');
+        };
+
+        function init() {
+            cams.forEach(camId => {
+                spotStatus[camId].clear();
+                drawOverlay(camId);
+            });
+            debugDiv.textContent = 'Ventana lista. Esperando datos...';
+            window.sendToWebots('ready');
+        }
+
+        window.addEventListener('load', init);
+    })();
+</script>
+</body>
+</html>

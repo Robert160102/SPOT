@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard de Parking</title>
+    <style>
+        body { margin: 0; font-family: sans-serif; overflow: hidden; }
+        .tabs { display: flex; background: #2d2d2d; padding: 5px 5px 0; }
+        .tab-btn {
+            padding: 10px 20px; background: #3d3d3d; border: none;
+            color: #ccc; cursor: pointer; margin-right: 5px;
+            border-radius: 5px 5px 0 0; font-size: 16px;
+        }
+        .tab-btn.active { background: #1e1e1e; color: white; }
+        .content {
+            width: 100%; height: calc(100vh - 50px);
+            border: none; background: #1e1e1e;
+        }
+    </style>
+</head>
+<body>
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="monitor">Monitor de Cámaras</button>
+        <button class="tab-btn" data-tab="kiosk">Pantalla de Entrada</button>
+    </div>
+    
+    <iframe id="monitor" class="content" src="../parking_monitor/parking_monitor.html" style="display:block;"></iframe>
+    <iframe id="kiosk" class="content" src="../kiosk_interface/kiosk_interface.html" style="display:none;"></iframe>
+
+    <script type="module">
+        import RobotWindow from 'https://cyberbotics.com/wwi/R2025a/RobotWindow.js';
+        const robotWindow = new RobotWindow();
+        robotWindow.setTitle('Dashboard Parking');
+
+        const btns = document.querySelectorAll('.tab-btn');
+        const monitorFrame = document.getElementById('monitor');
+        const kioskFrame = document.getElementById('kiosk');
+
+        btns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                btns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const tab = btn.dataset.tab;
+                monitorFrame.style.display = tab === 'monitor' ? 'block' : 'none';
+                kioskFrame.style.display = tab === 'kiosk' ? 'block' : 'none';
+            });
+        });
+
+        // Reenviar mensajes de Webots a los iframes activos
+        robotWindow.receive = function(message) {
+            monitorFrame.contentWindow.postMessage({type: 'webots', data: message}, '*');
+            kioskFrame.contentWindow.postMessage({type: 'webots', data: message}, '*');
+        };
+
+        // Escuchar mensajes de los iframes para enviarlos al controlador
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'robotWindow') {
+                robotWindow.send(event.data.data);
+            }
+        });
+
+        // Avisar al controlador que estamos listos
+        robotWindow.send('ready');
+        console.log('Dashboard listo');
+    </script>
+</body>
+</html>
