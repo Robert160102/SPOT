@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitor de Parking - 4 Cámaras</title>
     <style>
-        /* (mantén todo el CSS que ya tenías) */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -72,7 +71,7 @@
     </style>
 </head>
 <body>
-<h1>🚗 MONITOR DE PARKING - 4 CÁMARAS</h1>
+<h1>MONITOR DE PARKING - 4 CÁMARAS</h1>
 
 <div class="mosaic">
     <!-- Cámara A -->
@@ -168,6 +167,8 @@
         const spotConfigs = {};
         const spotStatus = {};
         const contexts = {};
+        // Almacena las detecciones YOLO por cámara
+        const vehicleDetections = {};
 
         let globalId = 1;
         cams.forEach(camId => {
@@ -186,6 +187,7 @@
             
             spotConfigs[camId] = spots;
             spotStatus[camId] = new Map();
+            vehicleDetections[camId] = [];  // inicialmente vacío
             
             const suffix = camId.replace('cam_parking_', '');
             contexts[camId] = {
@@ -199,6 +201,29 @@
 
         const debugDiv = document.getElementById('debug-info');
 
+        // Dibuja las cajas de vehículos detectados (azul)
+        function drawVehicleBoxes(camId) {
+            const ctx = contexts[camId].overlay.getContext('2d');
+            const detections = vehicleDetections[camId] || [];
+            for (const det of detections) {
+                const [x1, y1, x2, y2] = det.bbox;
+                ctx.strokeStyle = '#00BFFF';      // azul claro
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+                
+                // Etiqueta con clase y confianza
+                ctx.font = '12px Arial';
+                ctx.fillStyle = '#00BFFF';
+                ctx.shadowColor = '#000';
+                ctx.shadowBlur = 4;
+                ctx.fillText(
+                    `${det.class_name} ${det.confidence.toFixed(2)}`,
+                    x1, y1 - 5
+                );
+                ctx.shadowBlur = 0;
+            }
+        }
+
         function drawOverlay(camId) {
             const ctx = contexts[camId].overlay.getContext('2d');
             const configs = spotConfigs[camId];
@@ -206,6 +231,11 @@
             const canvas = contexts[camId].overlay;
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 1️⃣ Dibujar cajas de vehículos YOLO (capa inferior)
+            drawVehicleBoxes(camId);
+            
+            // 2️⃣ Dibujar plazas de parking (capa superior)
             if (!configs) return;
             
             let freeCount = 0;
@@ -252,9 +282,9 @@
                             drawOverlay(camId);
                         };
                         img.src = 'data:image/jpeg;base64,' + data[imgKey];
-                        delete data[imgKey];
                     }
 
+                    // Actualizar estado de plazas
                     const spotsData = data[camId];
                     if (spotsData && Array.isArray(spotsData)) {
                         const statusMap = spotStatus[camId];
@@ -264,6 +294,14 @@
                                 statusMap.set(item[0], item[1]);
                             }
                         }
+                    }
+
+                    // Actualizar detecciones YOLO
+                    const detectionsKey = `_detections_${camId}`;
+                    if (data[detectionsKey]) {
+                        vehicleDetections[camId] = data[detectionsKey];
+                    } else {
+                        vehicleDetections[camId] = [];
                     }
                 });
 
@@ -281,7 +319,7 @@
             }
         });
 
-        // Función para enviar al padre (si se necesita)
+        // Función para enviar al padre
         window.sendToWebots = function(msg) {
             window.parent.postMessage({type: 'robotWindow', data: msg}, '*');
         };
@@ -289,6 +327,7 @@
         function init() {
             cams.forEach(camId => {
                 spotStatus[camId].clear();
+                vehicleDetections[camId] = [];
                 drawOverlay(camId);
             });
             debugDiv.textContent = 'Ventana lista. Esperando datos...';

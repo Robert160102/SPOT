@@ -5,8 +5,11 @@ import os
 import sys
 import base64
 import cv2
+import torch
 
-from parking_detector import MorphologicalBackend, SpotConfig
+from parking_detector import MorphologicalBackend, SpotConfig, YOLOBackend
+
+yolo = True  # True usa Yolo, False usa morfológico
 
 def encode_frame_to_base64(frame_bgra: np.ndarray) -> str:
     """Convierte un frame BGRA (Webots) a JPEG base64 para enviar al navegador."""
@@ -71,10 +74,21 @@ if not cameras:
     print("ERROR: No se pudo habilitar ninguna cámara. Saliendo.")
     sys.exit(1)
 
-backend = MorphologicalBackend(free_threshold=900)
+if not yolo:
+    backend = MorphologicalBackend(free_threshold=900)
+else:
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Usando dispositivo: {device}")
+    backend = YOLOBackend(
+        model_path="./model/yolov8n-visdrone.pt",
+        mode="visdrone",
+        ioa_threshold=0.4,
+        iou_threshold=0.3,
+        confidence_threshold=0.4,
+        device=device
+    )
 
 # ==================== BUCLE PRINCIPAL (análisis a 1 Hz) ====================
-# Queremos procesar cada 1000 ms. Calculamos cuántos pasos equivalen.
 analysis_interval_ms = 1000
 steps_per_analysis = max(1, analysis_interval_ms // timestep)
 print(f"Se analizará cada {steps_per_analysis} pasos de simulación (aprox. cada 1 segundo)")
@@ -100,23 +114,43 @@ while robot.step(timestep) != -1:
             continue
         w = cam.getWidth()
         h = cam.getHeight()
-        frame = np.frombuffer(img_data, np.uint8).reshape((h, w, 4))
+        frame_bgra = np.frombuffer(img_data, np.uint8).reshape((h, w, 4))
+        # Convertir a BGR (3 canales) para los backends
+        frame_bgr = cv2.cvtColor(frame_bgra, cv2.COLOR_BGRA2BGR)
 
         spots = CAMERA_SPOTS[cam_name]
         if not spots:
             continue
 
         try:
-            results = backend.classify_spots(frame, spots)
+            results = backend.classify_spots(frame_bgr, spots)
         except Exception as e:
             print(f"  Error en {cam_name}: {e}")
             continue
 
-        # Guardar resultados
+        # Guardar resultados de plazas
         all_results[cam_name] = [(r.global_id, r.status) for r in results]
 
+        # --- Enviar detecciones YOLO (solo si está activo) ---
+        if yolo:
+            try:
+                # Obtener detecciones de vehículos (modo visdrone)
+                detections = backend.detect_vehicles(frame_bgr)
+                # Convertir a formato serializable
+                detections_serializable = [
+                    {
+                        "bbox": list(d["bbox"]),        # [x1, y1, x2, y2]
+                        "confidence": d["confidence"],
+                        "class_name": d["class_name"]
+                    }
+                    for d in detections
+                ]
+                all_results[f"_detections_{cam_name}"] = detections_serializable
+            except Exception as e:
+                print(f"  Error obteniendo detecciones YOLO en {cam_name}: {e}")
+
         # Enviar imagen de esta cámara
-        img_b64 = encode_frame_to_base64(frame)
+        img_b64 = encode_frame_to_base64(frame_bgra)
         all_results[f"_image_{cam_name}"] = img_b64
 
         free_count = sum(1 for r in results if r.status == "free")
