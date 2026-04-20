@@ -1,0 +1,21 @@
+{
+  "settings_version": "0.0.6",
+  "datasets_dir": "C:\\Users\\Alejandro\\ATA\\SPOT\\controllers\\parking_controller\\datasets",
+  "weights_dir": "weights",
+  "runs_dir": "runs",
+  "uuid": "0f162ab443a50f6336f9bf342d802e906993ce7dbdbf89eafd568e35642d6275",
+  "sync": true,
+  "api_key": "",
+  "openai_api_key": "",
+  "clearml": true,
+  "comet": true,
+  "dvc": true,
+  "hub": true,
+  "mlflow": true,
+  "neptune": true,
+  "raytune": true,
+  "tensorboard": false,
+  "wandb": false,
+  "vscode_msg": true,
+  "openvino_msg": true
+}

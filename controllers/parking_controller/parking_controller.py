@@ -9,7 +9,7 @@ import torch
 
 from parking_detector import MorphologicalBackend, SpotConfig, YOLOBackend
 
-yolo = True  # True usa Yolo, False usa morfológico
+yolo = False  # True usa Yolo, False usa morfológico
 
 def encode_frame_to_base64(frame_bgra: np.ndarray) -> str:
     """Convierte un frame BGRA (Webots) a JPEG base64 para enviar al navegador."""
