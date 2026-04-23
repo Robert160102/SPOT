@@ -7,6 +7,7 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/containers/protos/PlasticFruitBox.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/garden/protos/TableWithUmbrella.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/vehicles/protos/bmw/BmwX5.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/dji/mavic/protos/Mavic2Pro.proto"
 
 WorldInfo {
   title "Parking Zones - Spot Navigation"
@@ -14,8 +15,8 @@ WorldInfo {
   coordinateSystem "NUE"
 }
 Viewpoint {
-  orientation -0.8939430965793711 -0.16357850242339625 -0.41726228396897347 1.575001069668102
-  position -58.61354766940634 21.366973260351838 -42.79318785618206
+  orientation -0.8288946891073093 -0.3721879143160534 -0.4176239346670197 1.705692997874766
+  position -8.554922235105101 6.546088993317516 -94.39611893114784
 }
 TexturedBackground {
 }
@@ -376,8 +377,8 @@ SimpleTree {
   radius 2.2
 }
 BmwX5 {
-  translation -64.7 0.6297 1.42
-  rotation 0.9999999999929585 2.6643999999812385e-06 -2.6427099999813915e-06 -1.5707953071795862
+  translation -2.04985 0.630015 -68.7
+  rotation 0.5773489358550934 0.5773519358547601 0.5773499358549823 -2.094395307179586
   controller "coche_seguidor"
   sensorsSlotTop [
     Receiver {
@@ -2625,8 +2626,8 @@ Solid {
   name "fcb"
 }
 Spot {
-  translation 0.08291998866802355 0.5824836732874509 -69.68911531877029
-  rotation 0.6024281687221426 0.5184296397177787 0.6068863239455806 -2.19344684914544
+  translation 2.68396 0.783397 -69.6666
+  rotation -0.5533888947891599 -0.6190358823082902 -0.5572748940503498 2.04187
   controller "<none>"
 }
 Robot {
@@ -2720,5 +2721,13 @@ Transform {
         ]
       }
     }
+  ]
+}
+Mavic2Pro {
+  translation -2 1 -60
+  rotation 0.5771968951617173 0.5771968951617173 0.577656895078166 -2.093935307179586
+  controller "dron_controller"
+  controllerArgs [
+    ""
   ]
 }
