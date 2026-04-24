@@ -1,11 +1,8 @@
 #VRML_SIM R2025a utf8
 
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/boston_dynamics/spot/protos/Spot.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/trees/protos/SimpleTree.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/containers/protos/PlasticFruitBox.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/garden/protos/TableWithUmbrella.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/vehicles/protos/bmw/BmwX5.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/dji/mavic/protos/Mavic2Pro.proto"
 
@@ -14,8 +11,8 @@ WorldInfo {
   basicTimeStep 10
 }
 Viewpoint {
-  orientation 0.3353572940506704 -0.21292632935495837 -0.9177133885884177 4.448211615730426
-  position 46.522710305610865 -208.9629620525327 122.34831313257686
+  orientation 0.12773301778762597 -0.13799682175244546 -0.9821614701020855 4.706036664816967
+  position 6.571653472448579 -182.71735338787656 48.697550662279
 }
 TexturedBackground {
 }
@@ -376,8 +373,31 @@ SimpleTree {
   radius 2.2
 }
 BmwX5 {
-  translation -2.04985 -77.49 0.510014
-  rotation 0 0 1 1.5708
+  hidden position_0_0 4.761125553021019e-10
+  hidden position2_0_0 0.013452105878357608
+  hidden position_0_1 -4.700176691076454e-10
+  hidden position2_0_1 0.01345210332596377
+  hidden position_0_2 0.0043336780129032285
+  hidden position_0_3 0.004333668237900052
+  hidden position_0_9 3.7743360826689645e-07
+  hidden linearVelocity_0 1.4828903267265244e-13 1.559040363028143e-07 5.177571438252926e-13
+  hidden angularVelocity_0 -2.5943733040919803e-14 -2.9156442937472423e-12 -1.695712125533127e-14
+  hidden rotation_1 -2.380562776510508e-10 -0.9999999999999993 -3.539262772996143e-08 0.013452105878347493
+  hidden linearVelocity_1 -1.0950352651158422e-13 1.5590375332573324e-07 -5.21910914649238e-13
+  hidden angularVelocity_1 -6.340322787265981e-08 -3.0551183088731348e-12 -3.4412509109076423e-15
+  hidden rotation_2 -2.3500883455382253e-10 0.9999999999999993 3.4939560741295944e-08 0.013452103325957577
+  hidden linearVelocity_2 -9.920893361521052e-14 1.5590514656810925e-07 1.6824569836399045e-12
+  hidden angularVelocity_2 -6.340379345360424e-08 -3.2152124433857586e-12 -5.773387426053591e-15
+  hidden rotation_3 0 -1 0 0.004333678012894789
+  hidden linearVelocity_3 1.0325333474687153e-13 1.5590373989989256e-07 -4.931924498426573e-13
+  hidden angularVelocity_3 -1.3860183452186303e-07 -3.1396989845149276e-12 2.3440135992597222e-14
+  hidden rotation_4 0 1 0 0.004333668237883696
+  hidden linearVelocity_4 1.0069206251093755e-13 1.559051233176005e-07 1.6629163231603645e-12
+  hidden angularVelocity_4 -1.3860306251402155e-07 -3.4945283711303763e-12 -4.163476248302641e-15
+  hidden translation_23 -1.2892492584626325e-07 7.482636987798941e-07 -1.4471164999640962e-07
+  hidden rotation_23 0.7466598432279097 0 -0.6652060421485012 3.769728732309799e-07
+  translation -2.0498500472522037 -77.50152751666053 -0.2179036449812276
+  rotation 0.02746969965917422 -0.027469538508436257 0.9992451351168883 1.5715551485503518
   controller "coche_seguidor"
   sensorsSlotTop [
     Receiver {
@@ -2624,16 +2644,11 @@ Solid {
   ]
   name "fcb"
 }
-Spot {
-  translation 2.68396 -69.6666 0.783397
-  rotation 0 0 1 1.5708
-  controller "<none>"
-}
 Robot {
   children [
     Pose {
-      translation -52.99 26.99 25
-      rotation 1 0 0 1.5708
+      translation -53.11 26.99 25
+      rotation 0 1 0 1.5707996938995747
       children [
         Camera {
           name "cam_parking_A"
@@ -2646,8 +2661,8 @@ Robot {
       ]
     }
     Pose {
-      translation 43.89 23.98 25
-      rotation 1 0 0 1.5708
+      translation 44.15 23.98 25
+      rotation 0.5773489358556708 -0.5773509358554485 -0.5773509358554485 -2.094395307179586
       children [
         Camera {
           name "cam_parking_B"
@@ -2660,8 +2675,8 @@ Robot {
       ]
     }
     Pose {
-      translation -18 -38.99 20
-      rotation 1 0 0 1.5708
+      translation -15.94 -38.99 20
+      rotation 0.5773489358556708 -0.5773509358554485 -0.5773509358554485 -2.094395307179586
       children [
         Camera {
           name "cam_parking_CL"
@@ -2674,8 +2689,8 @@ Robot {
       ]
     }
     Pose {
-      translation 18 -38.76 20
-      rotation 1 0 0 1.5708
+      translation 16.08 -38.76 20
+      rotation 0.5773489358556708 -0.5773509358554485 -0.5773509358554485 -2.094395307179586
       children [
         Camera {
           name "cam_parking_CR"
@@ -2692,14 +2707,6 @@ Robot {
   controller "parking_controller"
   supervisor TRUE
   window "dashboard"
-}
-PlasticFruitBox {
-  translation -42.37 21.74 0.3
-  rotation 0 0 1 1.5708
-}
-TableWithUmbrella {
-  translation 10.13 -31.4 -0.939942
-  rotation 0 0 1 1.5708
 }
 Transform {
   translation 44.51 20.78 0.179944
@@ -2723,8 +2730,20 @@ Transform {
   ]
 }
 Mavic2Pro {
-  translation -2.84092 -69.5594 2.41243
-  rotation 2.653589999981315e-06 -2.653589999981315e-06 0.9999999999929585 1.5708
+  hidden position_0_0 0.00029056294753764325
+  hidden linearVelocity_0 -7.392857341303384e-08 9.40765927578829e-08 -5.2145012325118316e-09
+  hidden angularVelocity_0 -4.601609362493187e-08 1.7390286470342773e-12 6.493415105115193e-07
+  hidden rotation_5 0 0 1 0.00029056294768491434
+  hidden position_5_0 -3.7747195484103944e-09
+  hidden linearVelocity_5 7.833976833034814e-09 9.796944757155576e-08 5.815360705498107e-10
+  hidden angularVelocity_5 -4.601349991247272e-08 -6.129742615047269e-10 6.671410288534314e-07
+  hidden position_6_0 4.066889538957849e-09
+  hidden linearVelocity_6 6.702256626493613e-09 9.451249973045685e-08 4.890530756467647e-10
+  hidden angularVelocity_6 -5.043380731506101e-08 -6.106187574576659e-10 6.671416093245227e-07
+  hidden linearVelocity_7 7.46685244583809e-09 8.94324438381183e-08 5.433268116328444e-10
+  hidden angularVelocity_7 -5.043916085887589e-08 -1.5497909163926946e-08 6.666276990135029e-07
+  translation -1.9907090763146662 -69.8481492448979 0.02252567541675269
+  rotation -0.7070293603689811 0.7070780887431227 0.01224989777924498 3.117288267315829
   cameraSlot [
     Camera {
       width 400
