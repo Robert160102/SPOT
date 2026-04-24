@@ -12,11 +12,10 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 WorldInfo {
   title "Parking Zones - Spot Navigation"
   basicTimeStep 10
-  coordinateSystem "NUE"
 }
 Viewpoint {
-  orientation -0.8288946891073093 -0.3721879143160534 -0.4176239346670197 1.705692997874766
-  position -8.554922235105101 6.546088993317516 -94.39611893114784
+  orientation 0.3353572940506704 -0.21292632935495837 -0.9177133885884177 4.448211615730426
+  position 46.522710305610865 -208.9629620525327 122.34831313257686
 }
 TexturedBackground {
 }
@@ -24,7 +23,7 @@ TexturedBackgroundLight {
 }
 DirectionalLight {
   ambientIntensity 1
-  direction -0.5 -1 -0.5
+  direction -0.5 -0.5 -1
   castShadows TRUE
 }
 Solid {
@@ -36,7 +35,7 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 500 0.01 500
+        size 500 500 0.01
       }
     }
   ]
@@ -44,7 +43,7 @@ Solid {
   boundingObject USE GROUND
 }
 Solid {
-  translation 0 0.01 0
+  translation 0 0 0.01
   children [
     Shape {
       appearance PBRAppearance {
@@ -53,7 +52,7 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 220 0.02 10
+        size 220 10 0.02
       }
     }
   ]
@@ -62,7 +61,7 @@ Solid {
   }
 }
 Solid {
-  translation 0 0.06 5.3
+  translation 0 5.3 0.06
   children [
     Shape {
       appearance PBRAppearance {
@@ -71,17 +70,17 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 220 0.12 0.6
+        size 220 0.6 0.12
       }
     }
   ]
   name "curb_n"
   boundingObject Box {
-    size 220 0.12 0.6
+    size 220 0.6 0.12
   }
 }
 Solid {
-  translation 0 0.06 -5.3
+  translation 0 -5.3 0.06
   children [
     Shape {
       appearance PBRAppearance {
@@ -90,17 +89,17 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 220 0.12 0.6
+        size 220 0.6 0.12
       }
     }
   ]
   name "curb_s"
   boundingObject Box {
-    size 220 0.12 0.6
+    size 220 0.6 0.12
   }
 }
 Solid {
-  translation -70 0.025 0
+  translation -70 0 0.025
   children [
     Shape {
       appearance PBRAppearance {
@@ -109,14 +108,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 5 0.005 0.15
+        size 5 0.15 0.005
       }
     }
   ]
   name "cl01"
 }
 Solid {
-  translation -58 0.025 0
+  translation -58 0 0.025
   children [
     Shape {
       appearance PBRAppearance {
@@ -125,14 +124,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 5 0.005 0.15
+        size 5 0.15 0.005
       }
     }
   ]
   name "cl02"
 }
 Solid {
-  translation -46 0.025 0
+  translation -46 0 0.025
   children [
     Shape {
       appearance PBRAppearance {
@@ -141,14 +140,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 5 0.005 0.15
+        size 5 0.15 0.005
       }
     }
   ]
   name "cl03"
 }
 Solid {
-  translation -34 0.025 0
+  translation -34 0 0.025
   children [
     Shape {
       appearance PBRAppearance {
@@ -157,14 +156,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 5 0.005 0.15
+        size 5 0.15 0.005
       }
     }
   ]
   name "cl04"
 }
 Solid {
-  translation -22 0.025 0
+  translation -22 0 0.025
   children [
     Shape {
       appearance PBRAppearance {
@@ -173,14 +172,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 5 0.005 0.15
+        size 5 0.15 0.005
       }
     }
   ]
   name "cl05"
 }
 Solid {
-  translation 22 0.025 0
+  translation 22 0 0.025
   children [
     Shape {
       appearance PBRAppearance {
@@ -189,14 +188,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 5 0.005 0.15
+        size 5 0.15 0.005
       }
     }
   ]
   name "cl06"
 }
 Solid {
-  translation 34 0.025 0
+  translation 34 0 0.025
   children [
     Shape {
       appearance PBRAppearance {
@@ -205,14 +204,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 5 0.005 0.15
+        size 5 0.15 0.005
       }
     }
   ]
   name "cl07"
 }
 Solid {
-  translation 46 0.025 0
+  translation 46 0 0.025
   children [
     Shape {
       appearance PBRAppearance {
@@ -221,14 +220,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 5 0.005 0.15
+        size 5 0.15 0.005
       }
     }
   ]
   name "cl08"
 }
 Solid {
-  translation 58 0.025 0
+  translation 58 0 0.025
   children [
     Shape {
       appearance PBRAppearance {
@@ -237,14 +236,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 5 0.005 0.15
+        size 5 0.15 0.005
       }
     }
   ]
   name "cl09"
 }
 Solid {
-  translation 70 0.025 0
+  translation 70 0 0.025
   children [
     Shape {
       appearance PBRAppearance {
@@ -253,14 +252,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 5 0.005 0.15
+        size 5 0.15 0.005
       }
     }
   ]
   name "cl10"
 }
 Solid {
-  translation 0 0.01 -40
+  translation 0 -40 0.01
   children [
     Shape {
       appearance PBRAppearance {
@@ -269,14 +268,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 10 0.02 80
+        size 10 80 0.02
       }
     }
   ]
   name "road_access_ns"
 }
 Solid {
-  translation -45 0.01 20
+  translation -45 20 0.01
   children [
     Shape {
       appearance PBRAppearance {
@@ -285,14 +284,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 8 0.02 35
+        size 8 35 0.02
       }
     }
   ]
   name "road_to_a"
 }
 Solid {
-  translation 50 0.01 20
+  translation 50 20 0.01
   children [
     Shape {
       appearance PBRAppearance {
@@ -301,15 +300,15 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 8 0.02 35
+        size 8 35 0.02
       }
     }
   ]
   name "road_to_b"
 }
 Solid {
-  translation 0 0.015 8
-  rotation 1 0 0 -1.5708
+  translation 0 8 0.015
+  rotation -1 0 0 -5.307179586466759e-06
   children [
     Shape {
       appearance PBRAppearance {
@@ -328,8 +327,8 @@ Solid {
   }
 }
 Solid {
-  translation 0 0.08 8
-  rotation 1 0 0 -1.5708
+  translation 0 8 0.08
+  rotation 1 0 0 -3.1415853071795863
   children [
     Shape {
       appearance PBRAppearance {
@@ -348,8 +347,8 @@ Solid {
   }
 }
 Solid {
-  translation 0 0.12 8
-  rotation 1 0 0 -1.5708
+  translation 0 8 0.12
+  rotation 1 0 0 -3.1415853071795863
   children [
     Shape {
       appearance PBRAppearance {
@@ -370,15 +369,15 @@ Solid {
   }
 }
 SimpleTree {
-  translation 0 0.2 8
-  rotation 1 0 0 -1.5708
+  translation 0 8 0.2
+  rotation 1 0 0 1.5708
   name "tree_rot"
   height 5
   radius 2.2
 }
 BmwX5 {
-  translation -2.04985 0.630015 -68.7
-  rotation 0.5773489358550934 0.5773519358547601 0.5773499358549823 -2.094395307179586
+  translation -2.04985 -77.49 0.510014
+  rotation 0 0 1 1.5708
   controller "coche_seguidor"
   sensorsSlotTop [
     Receiver {
@@ -390,7 +389,7 @@ BmwX5 {
   ]
 }
 Solid {
-  translation -14 0.025 -3.5
+  translation -14 -3.5 0.025
   children [
     Shape {
       appearance PBRAppearance {
@@ -398,14 +397,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.5 0.005 1.2
+        size 0.5 1.2 0.005
       }
     }
   ]
   name "zw1"
 }
 Solid {
-  translation -14 0.025 -2
+  translation -14 -2 0.025
   children [
     Shape {
       appearance PBRAppearance {
@@ -413,14 +412,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.5 0.005 1.2
+        size 0.5 1.2 0.005
       }
     }
   ]
   name "zw2"
 }
 Solid {
-  translation -14 0.025 -0.5
+  translation -14 -0.5 0.025
   children [
     Shape {
       appearance PBRAppearance {
@@ -428,14 +427,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.5 0.005 1.2
+        size 0.5 1.2 0.005
       }
     }
   ]
   name "zw3"
 }
 Solid {
-  translation -14 0.025 1
+  translation -14 1 0.025
   children [
     Shape {
       appearance PBRAppearance {
@@ -443,14 +442,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.5 0.005 1.2
+        size 0.5 1.2 0.005
       }
     }
   ]
   name "zw4"
 }
 Solid {
-  translation -14 0.025 2.5
+  translation -14 2.5 0.025
   children [
     Shape {
       appearance PBRAppearance {
@@ -458,14 +457,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.5 0.005 1.2
+        size 0.5 1.2 0.005
       }
     }
   ]
   name "zw5"
 }
 Solid {
-  translation 14 0.025 -3.5
+  translation 14 -3.5 0.025
   children [
     Shape {
       appearance PBRAppearance {
@@ -473,14 +472,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.5 0.005 1.2
+        size 0.5 1.2 0.005
       }
     }
   ]
   name "ze1"
 }
 Solid {
-  translation 14 0.025 -2
+  translation 14 -2 0.025
   children [
     Shape {
       appearance PBRAppearance {
@@ -488,14 +487,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.5 0.005 1.2
+        size 0.5 1.2 0.005
       }
     }
   ]
   name "ze2"
 }
 Solid {
-  translation 14 0.025 -0.5
+  translation 14 -0.5 0.025
   children [
     Shape {
       appearance PBRAppearance {
@@ -503,14 +502,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.5 0.005 1.2
+        size 0.5 1.2 0.005
       }
     }
   ]
   name "ze3"
 }
 Solid {
-  translation 14 0.025 1
+  translation 14 1 0.025
   children [
     Shape {
       appearance PBRAppearance {
@@ -518,14 +517,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.5 0.005 1.2
+        size 0.5 1.2 0.005
       }
     }
   ]
   name "ze4"
 }
 Solid {
-  translation 14 0.025 2.5
+  translation 14 2.5 0.025
   children [
     Shape {
       appearance PBRAppearance {
@@ -533,14 +532,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.5 0.005 1.2
+        size 0.5 1.2 0.005
       }
     }
   ]
   name "ze5"
 }
 Solid {
-  translation -45 0.003865 28
+  translation -45 28 0.003865
   children [
     Shape {
       appearance PBRAppearance {
@@ -549,14 +548,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 50 0.01 36
+        size 50 36 0.01
       }
     }
   ]
   name "pa_ground"
 }
 Solid {
-  translation -65 0.02 14
+  translation -65 14 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -564,14 +563,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "an1"
 }
 Solid {
-  translation -62 0.02 14
+  translation -62 14 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -579,14 +578,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "an2"
 }
 Solid {
-  translation -59 0.02 14
+  translation -59 14 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -594,14 +593,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "an3"
 }
 Solid {
-  translation -56 0.02 14
+  translation -56 14 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -609,14 +608,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "an4"
 }
 Solid {
-  translation -53 0.02 14
+  translation -53 14 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -624,14 +623,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "an5"
 }
 Solid {
-  translation -50 0.02 14
+  translation -50 14 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -639,14 +638,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "an6"
 }
 Solid {
-  translation -47 0.02 14
+  translation -47 14 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -654,14 +653,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "an7"
 }
 Solid {
-  translation -44 0.02 14
+  translation -44 14 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -669,14 +668,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "an8"
 }
 Solid {
-  translation -41 0.02 14
+  translation -41 14 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -684,14 +683,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "an9"
 }
 Solid {
-  translation -53 0.06 11
+  translation -53 11 0.06
   children [
     Shape {
       appearance PBRAppearance {
@@ -700,17 +699,17 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 28 0.1 0.4
+        size 28 0.4 0.1
       }
     }
   ]
   name "atn"
   boundingObject Box {
-    size 28 0.1 0.4
+    size 28 0.4 0.1
   }
 }
 Solid {
-  translation -65 0.02 22
+  translation -65 22 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -718,14 +717,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "acn1"
 }
 Solid {
-  translation -62 0.02 22
+  translation -62 22 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -733,14 +732,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "acn2"
 }
 Solid {
-  translation -59 0.02 22
+  translation -59 22 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -748,14 +747,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "acn3"
 }
 Solid {
-  translation -56 0.02 22
+  translation -56 22 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -763,14 +762,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "acn4"
 }
 Solid {
-  translation -53 0.02 22
+  translation -53 22 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -778,14 +777,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "acn5"
 }
 Solid {
-  translation -50 0.02 22
+  translation -50 22 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -793,14 +792,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "acn6"
 }
 Solid {
-  translation -47 0.02 22
+  translation -47 22 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -808,14 +807,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "acn7"
 }
 Solid {
-  translation -44 0.02 22
+  translation -44 22 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -823,14 +822,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "acn8"
 }
 Solid {
-  translation -41 0.02 22
+  translation -41 22 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -838,14 +837,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "acn9"
 }
 Solid {
-  translation -53 0.06 25
+  translation -53 25 0.06
   children [
     Shape {
       appearance PBRAppearance {
@@ -854,17 +853,17 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 28 0.1 0.4
+        size 28 0.4 0.1
       }
     }
   ]
   name "atcn"
   boundingObject Box {
-    size 28 0.1 0.4
+    size 28 0.4 0.1
   }
 }
 Solid {
-  translation -65 0.02 32
+  translation -65 32 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -872,14 +871,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "acs1"
 }
 Solid {
-  translation -62 0.02 32
+  translation -62 32 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -887,14 +886,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "acs2"
 }
 Solid {
-  translation -59 0.02 32
+  translation -59 32 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -902,14 +901,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "acs3"
 }
 Solid {
-  translation -56 0.02 32
+  translation -56 32 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -917,14 +916,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "acs4"
 }
 Solid {
-  translation -53 0.02 32
+  translation -53 32 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -932,14 +931,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "acs5"
 }
 Solid {
-  translation -50 0.02 32
+  translation -50 32 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -947,14 +946,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "acs6"
 }
 Solid {
-  translation -47 0.02 32
+  translation -47 32 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -962,14 +961,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "acs7"
 }
 Solid {
-  translation -44 0.02 32
+  translation -44 32 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -977,14 +976,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "acs8"
 }
 Solid {
-  translation -41 0.02 32
+  translation -41 32 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -992,14 +991,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "acs9"
 }
 Solid {
-  translation -53 0.06 29
+  translation -53 29 0.06
   children [
     Shape {
       appearance PBRAppearance {
@@ -1008,17 +1007,17 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 28 0.1 0.4
+        size 28 0.4 0.1
       }
     }
   ]
   name "atcs"
   boundingObject Box {
-    size 28 0.1 0.4
+    size 28 0.4 0.1
   }
 }
 Solid {
-  translation -65 0.02 40
+  translation -65 40 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1026,14 +1025,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "as1"
 }
 Solid {
-  translation -62 0.02 40
+  translation -62 40 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1041,14 +1040,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "as2"
 }
 Solid {
-  translation -59 0.02 40
+  translation -59 40 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1056,14 +1055,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "as3"
 }
 Solid {
-  translation -56 0.02 40
+  translation -56 40 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1071,14 +1070,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "as4"
 }
 Solid {
-  translation -53 0.02 40
+  translation -53 40 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1086,14 +1085,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "as5"
 }
 Solid {
-  translation -50 0.02 40
+  translation -50 40 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1101,14 +1100,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "as6"
 }
 Solid {
-  translation -47 0.02 40
+  translation -47 40 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1116,14 +1115,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "as7"
 }
 Solid {
-  translation -44 0.02 40
+  translation -44 40 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1131,14 +1130,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "as8"
 }
 Solid {
-  translation -41 0.02 40
+  translation -41 40 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1146,14 +1145,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "as9"
 }
 Solid {
-  translation -53 0.06 43
+  translation -53 43 0.06
   children [
     Shape {
       appearance PBRAppearance {
@@ -1162,17 +1161,17 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 28 0.1 0.4
+        size 28 0.4 0.1
       }
     }
   ]
   name "ats"
   boundingObject Box {
-    size 28 0.1 0.4
+    size 28 0.4 0.1
   }
 }
 Solid {
-  translation -45 1.5 10
+  translation -45 10 1.5
   children [
     Shape {
       appearance PBRAppearance {
@@ -1181,15 +1180,15 @@ Solid {
         metalness 0.1
       }
       geometry Box {
-        size 2.5 2 0.15
+        size 2.5 0.15 2
       }
     }
   ]
   name "sign_a"
 }
 Solid {
-  translation -45 0.7 10
-  rotation 1 0 0 -1.5708
+  translation -45 10 0.7
+  rotation 1 0 0 1.5708
   children [
     Shape {
       appearance PBRAppearance {
@@ -1206,7 +1205,7 @@ Solid {
   name "pole_a"
 }
 Solid {
-  translation 50 0.008 28
+  translation 50 28 0.008
   children [
     Shape {
       appearance PBRAppearance {
@@ -1215,14 +1214,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 44 0.01 36
+        size 44 36 0.01
       }
     }
   ]
   name "pb_ground"
 }
 Solid {
-  translation 32 0.02 14
+  translation 32 14 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1230,14 +1229,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bn1"
 }
 Solid {
-  translation 35 0.02 14
+  translation 35 14 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1245,14 +1244,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bn2"
 }
 Solid {
-  translation 38 0.02 14
+  translation 38 14 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1260,14 +1259,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bn3"
 }
 Solid {
-  translation 41 0.02 14
+  translation 41 14 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1275,14 +1274,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bn4"
 }
 Solid {
-  translation 44 0.02 14
+  translation 44 14 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1290,14 +1289,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bn5"
 }
 Solid {
-  translation 47 0.02 14
+  translation 47 14 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1305,14 +1304,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bn6"
 }
 Solid {
-  translation 50 0.02 14
+  translation 50 14 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1320,14 +1319,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bn7"
 }
 Solid {
-  translation 53 0.02 14
+  translation 53 14 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1335,14 +1334,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bn8"
 }
 Solid {
-  translation 56 0.02 14
+  translation 56 14 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1350,14 +1349,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bn9"
 }
 Solid {
-  translation 44 0.06 11
+  translation 44 11 0.06
   children [
     Shape {
       appearance PBRAppearance {
@@ -1366,17 +1365,17 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 28 0.1 0.4
+        size 28 0.4 0.1
       }
     }
   ]
   name "btn"
   boundingObject Box {
-    size 28 0.1 0.4
+    size 28 0.4 0.1
   }
 }
 Solid {
-  translation 32 0.02 24
+  translation 32 24 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1384,14 +1383,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bc1"
 }
 Solid {
-  translation 35 0.02 24
+  translation 35 24 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1399,14 +1398,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bc2"
 }
 Solid {
-  translation 38 0.02 24
+  translation 38 24 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1414,14 +1413,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bc3"
 }
 Solid {
-  translation 41 0.02 24
+  translation 41 24 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1429,14 +1428,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bc4"
 }
 Solid {
-  translation 44 0.02 24
+  translation 44 24 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1444,14 +1443,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bc5"
 }
 Solid {
-  translation 47 0.02 24
+  translation 47 24 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1459,14 +1458,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bc6"
 }
 Solid {
-  translation 50 0.02 24
+  translation 50 24 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1474,14 +1473,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bc7"
 }
 Solid {
-  translation 53 0.02 24
+  translation 53 24 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1489,14 +1488,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bc8"
 }
 Solid {
-  translation 56 0.02 24
+  translation 56 24 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1504,14 +1503,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bc9"
 }
 Solid {
-  translation 44 0.06 21
+  translation 44 21 0.06
   children [
     Shape {
       appearance PBRAppearance {
@@ -1520,17 +1519,17 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 28 0.1 0.4
+        size 28 0.4 0.1
       }
     }
   ]
   name "btc1"
   boundingObject Box {
-    size 28 0.1 0.4
+    size 28 0.4 0.1
   }
 }
 Solid {
-  translation 44 0.06 27
+  translation 44 27 0.06
   children [
     Shape {
       appearance PBRAppearance {
@@ -1539,17 +1538,17 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 28 0.1 0.4
+        size 28 0.4 0.1
       }
     }
   ]
   name "btc2"
   boundingObject Box {
-    size 28 0.1 0.4
+    size 28 0.4 0.1
   }
 }
 Solid {
-  translation 32 0.02 34
+  translation 32 34 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1557,14 +1556,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bs1"
 }
 Solid {
-  translation 35 0.02 34
+  translation 35 34 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1572,14 +1571,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bs2"
 }
 Solid {
-  translation 38 0.02 34
+  translation 38 34 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1587,14 +1586,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bs3"
 }
 Solid {
-  translation 41 0.02 34
+  translation 41 34 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1602,14 +1601,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bs4"
 }
 Solid {
-  translation 44 0.02 34
+  translation 44 34 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1617,14 +1616,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bs5"
 }
 Solid {
-  translation 47 0.02 34
+  translation 47 34 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1632,14 +1631,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bs6"
 }
 Solid {
-  translation 50 0.02 34
+  translation 50 34 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1647,14 +1646,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bs7"
 }
 Solid {
-  translation 53 0.02 34
+  translation 53 34 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1662,14 +1661,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bs8"
 }
 Solid {
-  translation 56 0.02 34
+  translation 56 34 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1677,14 +1676,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.12 0.005 6
+        size 0.12 6 0.005
       }
     }
   ]
   name "bs9"
 }
 Solid {
-  translation 44 0.06 37
+  translation 44 37 0.06
   children [
     Shape {
       appearance PBRAppearance {
@@ -1693,17 +1692,17 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 28 0.1 0.4
+        size 28 0.4 0.1
       }
     }
   ]
   name "bts"
   boundingObject Box {
-    size 28 0.1 0.4
+    size 28 0.4 0.1
   }
 }
 Solid {
-  translation 50 1.5 10
+  translation 50 10 1.5
   children [
     Shape {
       appearance PBRAppearance {
@@ -1712,15 +1711,15 @@ Solid {
         metalness 0.1
       }
       geometry Box {
-        size 2.5 2 0.15
+        size 2.5 0.15 2
       }
     }
   ]
   name "sign_b"
 }
 Solid {
-  translation 50 0.7 10
-  rotation 1 0 0 -1.5708
+  translation 50 10 0.7
+  rotation 1 0 0 1.5708
   children [
     Shape {
       appearance PBRAppearance {
@@ -1737,7 +1736,7 @@ Solid {
   name "pole_b"
 }
 Solid {
-  translation -18 0.008 -40
+  translation -18 -40 0.008
   children [
     Shape {
       appearance PBRAppearance {
@@ -1746,14 +1745,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 26 0.01 30
+        size 26 30 0.01
       }
     }
   ]
   name "pc_l_gnd"
 }
 Solid {
-  translation -10 0.02 -30
+  translation -10 -30 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1761,14 +1760,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cl1_1"
 }
 Solid {
-  translation -10 0.02 -33
+  translation -10 -33 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1776,14 +1775,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cl1_2"
 }
 Solid {
-  translation -10 0.02 -36
+  translation -10 -36 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1791,14 +1790,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cl1_3"
 }
 Solid {
-  translation -10 0.02 -39
+  translation -10 -39 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1806,14 +1805,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cl1_4"
 }
 Solid {
-  translation -10 0.02 -42
+  translation -10 -42 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1821,14 +1820,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cl1_5"
 }
 Solid {
-  translation -10 0.02 -45
+  translation -10 -45 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1836,14 +1835,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cl1_6"
 }
 Solid {
-  translation -10 0.02 -48
+  translation -10 -48 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1851,14 +1850,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cl1_7"
 }
 Solid {
-  translation -24 0.02 -30
+  translation -24 -30 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1866,14 +1865,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cl2_1"
 }
 Solid {
-  translation -24 0.02 -33
+  translation -24 -33 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1881,14 +1880,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cl2_2"
 }
 Solid {
-  translation -24 0.02 -36
+  translation -24 -36 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1896,14 +1895,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cl2_3"
 }
 Solid {
-  translation -24 0.02 -39
+  translation -24 -39 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1911,14 +1910,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cl2_4"
 }
 Solid {
-  translation -24 0.02 -42
+  translation -24 -42 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1926,14 +1925,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cl2_5"
 }
 Solid {
-  translation -24 0.02 -45
+  translation -24 -45 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1941,14 +1940,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cl2_6"
 }
 Solid {
-  translation -24 0.02 -48
+  translation -24 -48 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -1956,14 +1955,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cl2_7"
 }
 Solid {
-  translation -7 0.06 -39
+  translation -7 -39 0.06
   children [
     Shape {
       appearance PBRAppearance {
@@ -1972,17 +1971,17 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.4 0.1 22
+        size 0.4 22 0.1
       }
     }
   ]
   name "clt1"
   boundingObject Box {
-    size 0.4 0.1 22
+    size 0.4 22 0.1
   }
 }
 Solid {
-  translation -27 0.06 -39
+  translation -27 -39 0.06
   children [
     Shape {
       appearance PBRAppearance {
@@ -1991,17 +1990,17 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.4 0.1 22
+        size 0.4 22 0.1
       }
     }
   ]
   name "clt2"
   boundingObject Box {
-    size 0.4 0.1 22
+    size 0.4 22 0.1
   }
 }
 Solid {
-  translation 18 0.008 -40
+  translation 18 -40 0.008
   children [
     Shape {
       appearance PBRAppearance {
@@ -2010,14 +2009,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 26 0.01 30
+        size 26 30 0.01
       }
     }
   ]
   name "pc_r_gnd"
 }
 Solid {
-  translation 10 0.02 -30
+  translation 10 -30 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -2025,14 +2024,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cr1_1"
 }
 Solid {
-  translation 10 0.02 -33
+  translation 10 -33 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -2040,14 +2039,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cr1_2"
 }
 Solid {
-  translation 10 0.02 -36
+  translation 10 -36 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -2055,14 +2054,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cr1_3"
 }
 Solid {
-  translation 10 0.02 -39
+  translation 10 -39 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -2070,14 +2069,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cr1_4"
 }
 Solid {
-  translation 10 0.02 -42
+  translation 10 -42 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -2085,14 +2084,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cr1_5"
 }
 Solid {
-  translation 10 0.02 -45
+  translation 10 -45 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -2100,14 +2099,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cr1_6"
 }
 Solid {
-  translation 10 0.02 -48
+  translation 10 -48 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -2115,14 +2114,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cr1_7"
 }
 Solid {
-  translation 24 0.02 -30
+  translation 24 -30 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -2130,14 +2129,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cr2_1"
 }
 Solid {
-  translation 24 0.02 -33
+  translation 24 -33 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -2145,14 +2144,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cr2_2"
 }
 Solid {
-  translation 24 0.02 -36
+  translation 24 -36 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -2160,14 +2159,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cr2_3"
 }
 Solid {
-  translation 24 0.02 -39
+  translation 24 -39 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -2175,14 +2174,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cr2_4"
 }
 Solid {
-  translation 24 0.02 -42
+  translation 24 -42 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -2190,14 +2189,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cr2_5"
 }
 Solid {
-  translation 24 0.02 -45
+  translation 24 -45 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -2205,14 +2204,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cr2_6"
 }
 Solid {
-  translation 24 0.02 -48
+  translation 24 -48 0.02
   children [
     Shape {
       appearance PBRAppearance {
@@ -2220,14 +2219,14 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 6 0.005 0.12
+        size 6 0.12 0.005
       }
     }
   ]
   name "cr2_7"
 }
 Solid {
-  translation 7 0.06 -39
+  translation 7 -39 0.06
   children [
     Shape {
       appearance PBRAppearance {
@@ -2236,17 +2235,17 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.4 0.1 22
+        size 0.4 22 0.1
       }
     }
   ]
   name "crt1"
   boundingObject Box {
-    size 0.4 0.1 22
+    size 0.4 22 0.1
   }
 }
 Solid {
-  translation 27 0.06 -39
+  translation 27 -39 0.06
   children [
     Shape {
       appearance PBRAppearance {
@@ -2255,17 +2254,17 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 0.4 0.1 22
+        size 0.4 22 0.1
       }
     }
   ]
   name "crt2"
   boundingObject Box {
-    size 0.4 0.1 22
+    size 0.4 22 0.1
   }
 }
 Solid {
-  translation 0 1.5 -26
+  translation 0 -26 1.5
   children [
     Shape {
       appearance PBRAppearance {
@@ -2274,15 +2273,15 @@ Solid {
         metalness 0.1
       }
       geometry Box {
-        size 2.5 2 0.15
+        size 2.5 0.15 2
       }
     }
   ]
   name "sign_c"
 }
 Solid {
-  translation 0 0.7 -26
-  rotation 1 0 0 -1.5708
+  translation 0 -26 0.7
+  rotation 1 0 0 1.5708
   children [
     Shape {
       appearance PBRAppearance {
@@ -2299,7 +2298,7 @@ Solid {
   name "pole_c"
 }
 Solid {
-  translation -15 6 65
+  translation -15 65 6
   children [
     Shape {
       appearance PBRAppearance {
@@ -2308,17 +2307,17 @@ Solid {
         metalness 0.1
       }
       geometry Box {
-        size 20 12 18
+        size 20 18 12
       }
     }
   ]
   name "bld1"
   boundingObject Box {
-    size 20 12 18
+    size 20 18 12
   }
 }
 Solid {
-  translation 15 6 65
+  translation 15 65 6
   children [
     Shape {
       appearance PBRAppearance {
@@ -2327,17 +2326,17 @@ Solid {
         metalness 0.1
       }
       geometry Box {
-        size 20 12 18
+        size 20 18 12
       }
     }
   ]
   name "bld2"
   boundingObject Box {
-    size 20 12 18
+    size 20 18 12
   }
 }
 Solid {
-  translation -55 4 60
+  translation -55 60 4
   children [
     Shape {
       appearance PBRAppearance {
@@ -2346,17 +2345,17 @@ Solid {
         metalness 0.05
       }
       geometry Box {
-        size 18 8 14
+        size 18 14 8
       }
     }
   ]
   name "bld3"
   boundingObject Box {
-    size 18 8 14
+    size 18 14 8
   }
 }
 Solid {
-  translation 60 5 60
+  translation 60 60 5
   children [
     Shape {
       appearance PBRAppearance {
@@ -2365,149 +2364,149 @@ Solid {
         metalness 0.05
       }
       geometry Box {
-        size 22 10 16
+        size 22 16 10
       }
     }
   ]
   name "bld4"
   boundingObject Box {
-    size 22 10 16
+    size 22 16 10
   }
 }
 SimpleTree {
-  translation -68 0 15
-  rotation 1 0 0 -1.5708
+  translation -68 15 0
+  rotation 0 0 1 1.5708
   name "t1"
   height 6
   radius 2.5
 }
 SimpleTree {
-  translation -68 0 30
-  rotation 1 0 0 -1.5708
+  translation -68 30 0
+  rotation 0 0 1 1.5708
   name "t2"
   height 7
   radius 3
 }
 SimpleTree {
-  translation -68 0 42
-  rotation 1 0 0 -1.5708
+  translation -68 42 0
+  rotation 0 0 1 1.5708
   name "t3"
   height 5
 }
 SimpleTree {
-  translation -25 0 44
-  rotation 1 0 0 -1.5708
+  translation -25 44 0
+  rotation 0 0 1 1.5708
   name "t4"
   height 6
   radius 2.5
 }
 SimpleTree {
-  translation 65 0 15
-  rotation 1 0 0 -1.5708
+  translation 65 15 0
+  rotation 0 0 1 1.5708
   name "t5"
   height 6
   radius 2.5
 }
 SimpleTree {
-  translation 65 0 30
-  rotation 1 0 0 -1.5708
+  translation 65 30 0
+  rotation 0 0 1 1.5708
   name "t6"
   height 7
   radius 3
 }
 SimpleTree {
-  translation 65 0 42
-  rotation 1 0 0 -1.5708
+  translation 65 42 0
+  rotation 0 0 1 1.5708
   name "t7"
   height 5
 }
 SimpleTree {
-  translation 30 0 44
-  rotation 1 0 0 -1.5708
+  translation 30 44 0
+  rotation 0 0 1 1.5708
   name "t8"
   height 6
   radius 2.5
 }
 SimpleTree {
-  translation 8 0 -20
-  rotation 1 0 0 -1.5708
+  translation 8 -20 0
+  rotation 0 0 1 1.5708
   name "t9"
   height 5
 }
 SimpleTree {
-  translation -8 0 -25
-  rotation 1 0 0 -1.5708
+  translation -8 -25 0
+  rotation 0 0 1 1.5708
   name "t10"
   height 5
 }
 SimpleTree {
-  translation 8 0 -55
-  rotation 1 0 0 -1.5708
+  translation 8 -55 0
+  rotation 0 0 1 1.5708
   name "t11"
   height 5
 }
 SimpleTree {
-  translation -8 0 -55
-  rotation 1 0 0 -1.5708
+  translation -8 -55 0
+  rotation 0 0 1 1.5708
   name "t12"
   height 6
   radius 2.5
 }
 SimpleTree {
-  translation -35 0 55
-  rotation 1 0 0 -1.5708
+  translation -35 55 0
+  rotation 0 0 1 1.5708
   name "t13"
   height 7
   radius 3
 }
 SimpleTree {
-  translation 40 0 55
-  rotation 1 0 0 -1.5708
+  translation 40 55 0
+  rotation 0 0 1 1.5708
   name "t14"
   height 7
   radius 3
 }
 SimpleTree {
-  translation -5 0 64
-  rotation 1 0 0 -1.5708
+  translation -5 64 0
+  rotation 0 0 1 1.5708
   name "t15"
   height 6
   radius 2.5
 }
 SimpleTree {
-  translation 25 0 64
-  rotation 1 0 0 -1.5708
+  translation 25 64 0
+  rotation 0 0 1 1.5708
   name "t16"
   height 6
   radius 2.5
 }
 SimpleTree {
-  translation -32 0 -30
-  rotation 1 0 0 -1.5708
+  translation -32 -30 0
+  rotation 0 0 1 1.5708
   name "t17"
   height 5
 }
 SimpleTree {
-  translation -32 0 -48
-  rotation 1 0 0 -1.5708
+  translation -32 -48 0
+  rotation 0 0 1 1.5708
   name "t18"
   height 5
 }
 SimpleTree {
-  translation 32 0 -30
-  rotation 1 0 0 -1.5708
+  translation 32 -30 0
+  rotation 0 0 1 1.5708
   name "t19"
   height 5
 }
 SimpleTree {
-  translation 32 0 -48
-  rotation 1 0 0 -1.5708
+  translation 32 -48 0
+  rotation 0 0 1 1.5708
   name "t20"
   height 5
 }
 Solid {
-  translation -45 3 28
-  rotation 1 0 0 -1.5708
+  translation -45 28 3
+  rotation 0 0 1 1.5708
   children [
     Shape {
       appearance PBRAppearance {
@@ -2524,7 +2523,7 @@ Solid {
   name "fa"
 }
 Solid {
-  translation -45 6.1 28
+  translation -45 28 6.1
   children [
     PointLight {
       attenuation 0 0 0.3
@@ -2546,8 +2545,8 @@ Solid {
   name "fab"
 }
 Solid {
-  translation 50 3 28
-  rotation 1 0 0 -1.5708
+  translation 50 28 3
+  rotation 0 0 1 -5.307179586466759e-06
   children [
     Shape {
       appearance PBRAppearance {
@@ -2564,7 +2563,7 @@ Solid {
   name "fb"
 }
 Solid {
-  translation 50 6.1 28
+  translation 50 28 6.1
   children [
     PointLight {
       attenuation 0 0 0.3
@@ -2586,8 +2585,8 @@ Solid {
   name "fbb"
 }
 Solid {
-  translation 0 3 -40
-  rotation 1 0 0 -1.5708
+  translation 0 -40 3
+  rotation 0 0 1 1.5708
   children [
     Shape {
       appearance PBRAppearance {
@@ -2604,7 +2603,7 @@ Solid {
   name "fc"
 }
 Solid {
-  translation 0 6.1 -40
+  translation 0 -40 6.1
   children [
     PointLight {
       attenuation 0 0 0.3
@@ -2626,15 +2625,15 @@ Solid {
   name "fcb"
 }
 Spot {
-  translation 2.68396 0.783397 -69.6666
-  rotation -0.5533888947891599 -0.6190358823082902 -0.5572748940503498 2.04187
+  translation 2.68396 -69.6666 0.783397
+  rotation 0 0 1 1.5708
   controller "<none>"
 }
 Robot {
   children [
     Pose {
-      translation -52.99 25 26.99
-      rotation 0.5773489358556708 -0.5773509358554485 -0.5773509358554485 2.0944
+      translation -52.99 26.99 25
+      rotation 1 0 0 1.5708
       children [
         Camera {
           name "cam_parking_A"
@@ -2647,8 +2646,8 @@ Robot {
       ]
     }
     Pose {
-      translation 43.89 25 23.98
-      rotation 0 0 -1 1.5708
+      translation 43.89 23.98 25
+      rotation 1 0 0 1.5708
       children [
         Camera {
           name "cam_parking_B"
@@ -2661,8 +2660,8 @@ Robot {
       ]
     }
     Pose {
-      translation -18 20 -38.99
-      rotation 0 0 -1 1.5708
+      translation -18 -38.99 20
+      rotation 1 0 0 1.5708
       children [
         Camera {
           name "cam_parking_CL"
@@ -2675,8 +2674,8 @@ Robot {
       ]
     }
     Pose {
-      translation 18 20 -38.76
-      rotation 0 0 -1 1.5708
+      translation 18 -38.76 20
+      rotation 1 0 0 1.5708
       children [
         Camera {
           name "cam_parking_CR"
@@ -2695,16 +2694,16 @@ Robot {
   window "dashboard"
 }
 PlasticFruitBox {
-  translation -42.37 0.3 21.74
-  rotation 0.5773509358560258 -0.577349935856137 -0.577349935856137 -2.094395307179586
+  translation -42.37 21.74 0.3
+  rotation 0 0 1 1.5708
 }
 TableWithUmbrella {
-  translation 10.13 -0.939942 -31.4
-  rotation 1 0 0 -1.5707953071795862
+  translation 10.13 -31.4 -0.939942
+  rotation 0 0 1 1.5708
 }
 Transform {
-  translation 44.51 0.179952 26.84
-  rotation -2.3463999999870816e-06 0.9999999999944944 2.3463999999870816e-06 -1.5707953071795862
+  translation 44.51 20.78 0.179944
+  rotation -0.5773509358554485 0.5773489358556708 0.5773509358554485 -2.094395307179586
   scale 0.05 0.05 0.05
   children [
     Shape {
@@ -2724,10 +2723,13 @@ Transform {
   ]
 }
 Mavic2Pro {
-  translation -2 1 -60
-  rotation 0.5771968951617173 0.5771968951617173 0.577656895078166 -2.093935307179586
-  controller "dron_controller"
-  controllerArgs [
-    ""
+  translation -2.84092 -69.5594 2.41243
+  rotation 2.653589999981315e-06 -2.653589999981315e-06 0.9999999999929585 1.5708
+  cameraSlot [
+    Camera {
+      width 400
+      height 240
+      near 0.2
+    }
   ]
 }
