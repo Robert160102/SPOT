@@ -11,8 +11,13 @@ WorldInfo {
   basicTimeStep 10
 }
 Viewpoint {
+<<<<<<< HEAD
   orientation 0.12773301778762597 -0.13799682175244546 -0.9821614701020855 4.706036664816967
   position 6.571653472448579 -182.71735338787656 48.697550662279
+=======
+  orientation -0.2984186311860389 0.7246868096369401 0.6211081616749892 0.8022765561362707
+  position -9.995608037078439 -72.86942143845124 4.6746159253923825
+>>>>>>> b413f80 (fix: Coche y dron estable a nivel del suelo)
 }
 TexturedBackground {
 }
@@ -37,7 +42,14 @@ Solid {
     }
   ]
   name "ground"
-  boundingObject USE GROUND
+  boundingObject Pose {
+    translation 0 0 -0.5
+    children [
+      Box {
+        size 500 500 1
+      }
+    ]
+  }
 }
 Solid {
   translation 0 0 0.01
@@ -54,7 +66,13 @@ Solid {
     }
   ]
   name "road_main_ew"
-  boundingObject Plane {
+  boundingObject Pose {
+    translation 0 0 -0.49
+    children [
+      Box {
+        size 220 10 1
+      }
+    ]
   }
 }
 Solid {
@@ -270,6 +288,14 @@ Solid {
     }
   ]
   name "road_access_ns"
+  boundingObject Pose {
+    translation 0 0 -0.49
+    children [
+      Box {
+        size 10 80 1.2
+      }
+    ]
+  }
 }
 Solid {
   translation -45 20 0.01
@@ -286,6 +312,9 @@ Solid {
     }
   ]
   name "road_to_a"
+  boundingObject Box {
+    size 8 35 0.02
+  }
 }
 Solid {
   translation 50 20 0.01
@@ -302,6 +331,9 @@ Solid {
     }
   ]
   name "road_to_b"
+  boundingObject Box {
+    size 8 35 0.02
+  }
 }
 Solid {
   translation 0 8 0.015
@@ -320,7 +352,9 @@ Solid {
     }
   ]
   name "roundabout"
-  boundingObject Plane {
+  boundingObject Cylinder {
+    height 0.02
+    radius 12
   }
 }
 Solid {
@@ -340,7 +374,9 @@ Solid {
     }
   ]
   name "roundabout_curb"
-  boundingObject Plane {
+  boundingObject Cylinder {
+    height 0.16
+    radius 5.5
   }
 }
 Solid {
@@ -366,13 +402,13 @@ Solid {
   }
 }
 SimpleTree {
-  translation 0 8 0.2
-  rotation 1 0 0 1.5708
+  translation 0 8 0.22
   name "tree_rot"
   height 5
   radius 2.2
 }
 BmwX5 {
+<<<<<<< HEAD
   hidden position_0_0 4.761125553021019e-10
   hidden position2_0_0 0.013452105878357608
   hidden position_0_1 -4.700176691076454e-10
@@ -398,6 +434,33 @@ BmwX5 {
   hidden rotation_23 0.7466598432279097 0 -0.6652060421485012 3.769728732309799e-07
   translation -2.0498500472522037 -77.50152751666053 -0.2179036449812276
   rotation 0.02746969965917422 -0.027469538508436257 0.9992451351168883 1.5715551485503518
+=======
+  hidden position_0_0 4.203649535769938e-12
+  hidden position2_0_0 0.0003478926048545914
+  hidden position_0_1 -3.845416837816297e-12
+  hidden position2_0_1 0.00034789265105835646
+  hidden position_0_2 0.0011593677941629393
+  hidden position_0_3 0.0011593679788479182
+  hidden position_0_9 4.957841208031567e-07
+  hidden linearVelocity_0 -2.8590486619853243e-13 5.246160943464758e-08 -2.3222451794936207e-07
+  hidden angularVelocity_0 -2.0250255609393413e-07 -9.13654949282016e-13 -1.9631628633264842e-14
+  hidden rotation_1 -2.101824767884969e-12 -1 -1.2083181518416829e-08 0.0003478926044763857
+  hidden linearVelocity_1 -2.1106090523777827e-13 4.100964502489851e-08 -4.111505165238293e-07
+  hidden angularVelocity_1 -1.822075531903121e-07 -8.87681159986393e-13 -2.3304044251350134e-14
+  hidden rotation_2 -1.922708418908148e-12 0.9999999999999998 1.1053457977148381e-08 0.0003478926504308279
+  hidden linearVelocity_2 -2.085683257773081e-13 4.100975170032884e-08 -4.111502995389811e-07
+  hidden angularVelocity_2 -1.8220761499047627e-07 -8.364291176415017e-13 -2.108162566225513e-14
+  hidden rotation_3 0 -1 0 0.0011593677941132636
+  hidden linearVelocity_3 -2.3955067462501174e-13 4.055520321664131e-08 1.705722106256265e-08
+  hidden angularVelocity_3 -1.0803461985979794e-07 -8.264422956582775e-13 -2.588820089323861e-14
+  hidden rotation_4 0 1 0 0.0011593679787406054
+  hidden linearVelocity_4 -2.47644650363949e-13 4.055526700787006e-08 1.7057377950398707e-08
+  hidden angularVelocity_4 -1.0803478847940373e-07 -5.655684542581234e-13 -2.2709502839222164e-14
+  hidden translation_23 -1.693514151135389e-07 9.828940977785194e-07 -1.9008832319311608e-07
+  hidden rotation_23 0.7466598432279096 0 -0.6652060421485012 4.960094981519366e-07
+  translation -2.0498499881951977 -77.50149411753713 0.3051445716731121
+  rotation 0.005489618473732833 -0.00548959766194627 0.9999698637491646 1.5708301367468265
+>>>>>>> b413f80 (fix: Coche y dron estable a nivel del suelo)
   controller "coche_seguidor"
   sensorsSlotTop [
     Receiver {
@@ -407,6 +470,7 @@ BmwX5 {
     GPS {
     }
   ]
+  window "<none>"
 }
 Solid {
   translation -14 -3.5 0.025
@@ -573,6 +637,14 @@ Solid {
     }
   ]
   name "pa_ground"
+  boundingObject Pose {
+    translation 0 0 -0.5
+    children [
+      Box {
+        size 50 36 1
+      }
+    ]
+  }
 }
 Solid {
   translation -65 14 0.02
@@ -1239,6 +1311,14 @@ Solid {
     }
   ]
   name "pb_ground"
+  boundingObject Pose {
+    translation 0 0 -0.49
+    children [
+      Box {
+        size 44 36 1
+      }
+    ]
+  }
 }
 Solid {
   translation 32 14 0.02
@@ -1770,6 +1850,14 @@ Solid {
     }
   ]
   name "pc_l_gnd"
+  boundingObject Pose {
+    translation 0 0 -0.49
+    children [
+      Box {
+        size 26 30 1
+      }
+    ]
+  }
 }
 Solid {
   translation -10 -30 0.02
@@ -2034,6 +2122,14 @@ Solid {
     }
   ]
   name "pc_r_gnd"
+  boundingObject Pose {
+    translation 0 0 -0.49
+    children [
+      Box {
+        size 26 30 1
+      }
+    ]
+  }
 }
 Solid {
   translation 10 -30 0.02
@@ -2730,6 +2826,7 @@ Transform {
   ]
 }
 Mavic2Pro {
+<<<<<<< HEAD
   hidden position_0_0 0.00029056294753764325
   hidden linearVelocity_0 -7.392857341303384e-08 9.40765927578829e-08 -5.2145012325118316e-09
   hidden angularVelocity_0 -4.601609362493187e-08 1.7390286470342773e-12 6.493415105115193e-07
@@ -2744,6 +2841,22 @@ Mavic2Pro {
   hidden angularVelocity_7 -5.043916085887589e-08 -1.5497909163926946e-08 6.666276990135029e-07
   translation -1.9907090763146662 -69.8481492448979 0.02252567541675269
   rotation -0.7070293603689811 0.7070780887431227 0.01224989777924498 3.117288267315829
+=======
+  hidden position_0_0 1.6723854693285857e-09
+  hidden linearVelocity_0 -1.7776500332642707e-10 9.83018099616613e-07 1.5504149715926222e-13
+  hidden angularVelocity_0 6.662141391761569e-13 -9.4191376688574e-14 -4.159660043593287e-11
+  hidden position_5_0 -3.9091424671988455e-09
+  hidden linearVelocity_5 -1.7259225747320984e-10 9.830757993233872e-07 4.306015004022515e-12
+  hidden angularVelocity_5 9.012567277949636e-13 -1.3333451608018735e-09 1.89770123888535e-08
+  hidden position_6_0 -1.4815724746357353e-09
+  hidden linearVelocity_6 -1.372007972246404e-10 9.828866339243682e-07 -1.3613643079035205e-10
+  hidden angularVelocity_6 5.107763247059663e-08 -1.3252244852836768e-09 1.897693913725572e-08
+  hidden linearVelocity_7 -1.3938479412805483e-10 9.831693559079137e-07 -7.130927480135071e-11
+  hidden angularVelocity_7 5.1079978549263436e-08 -1.6104742425386423e-08 1.794085116191163e-08
+  translation -1.9999992933523707 -70.01596490879291 0.18563492038078827
+  rotation 0.034966258487299395 -0.03495930800068378 0.9987768557348097 1.5721791121291064
+  controller "dron_controller"
+>>>>>>> b413f80 (fix: Coche y dron estable a nivel del suelo)
   cameraSlot [
     Camera {
       width 400
