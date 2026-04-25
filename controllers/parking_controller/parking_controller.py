@@ -13,9 +13,7 @@ yolo = True  # True usa Yolo, False usa morfológico
 
 def encode_frame_to_base64(frame_bgra: np.ndarray) -> str:
     """Convierte un frame BGRA (Webots) a JPEG base64 para enviar al navegador."""
-    # Convertir BGRA -> BGR
     frame_bgr = cv2.cvtColor(frame_bgra, cv2.COLOR_BGRA2BGR)
-    # Codificar como JPEG
     _, buffer = cv2.imencode('.jpg', frame_bgr, [cv2.IMWRITE_JPEG_QUALITY, 70])
     return base64.b64encode(buffer).decode('utf-8')
 
@@ -54,6 +52,35 @@ CAMERA_SPOTS = load_parking_config("parking_config.json")
 for cam, spots in CAMERA_SPOTS.items():
     print(f"  {cam}: {len(spots)} plazas")
 
+# ==================== GEMELO DIGITAL ====================
+digital_twin = {}  # global_id -> info
+
+def load_spot_attributes(config_path="parking_config.json"):
+    """Carga type, priority desde el JSON y construye el digital_twin."""
+    with open(config_path, 'r') as f:
+        config = json.load(f)
+    global_id = config.get("spot_id_start", 1)
+    for cam_data in config["cameras"]:
+        cam_id = cam_data["id"]
+        width = cam_data["spot_width"]
+        height = cam_data["spot_height"]
+        for spot in cam_data["spots"]:
+            spot_type = spot.get("type", "normal")
+            priority = spot.get("priority", 999)
+            digital_twin[global_id] = {
+                "camera": cam_id,
+                "type": spot_type,
+                "priority": priority,
+                "status": "free",
+                "x": spot["x"],
+                "y": spot["y"],
+                "width": width,
+                "height": height
+            }
+            global_id += 1
+
+load_spot_attributes()
+
 # ==================== INICIALIZACIÓN ====================
 robot = Robot()
 timestep = int(robot.getBasicTimeStep())
@@ -88,77 +115,147 @@ else:
         device=device
     )
 
-# ==================== BUCLE PRINCIPAL (análisis a 1 Hz) ====================
-analysis_interval_ms = 1000
-steps_per_analysis = max(1, analysis_interval_ms // timestep)
-print(f"Se analizará cada {steps_per_analysis} pasos de simulación (aprox. cada 1 segundo)")
+# ==================== CONFIGURACIÓN ROUND‑ROBIN (original funcional) ====================
+ANALYSIS_INTERVAL = 1.0
+last_analysis_time = {}
+num_cams = len(cameras)
+start_time = robot.getTime()
+for idx, cam_name in enumerate(cameras.keys()):
+    offset = (idx / num_cams) * ANALYSIS_INTERVAL
+    last_analysis_time[cam_name] = start_time - offset
 
-step_counter = 0
-last_time = robot.getTime()
+accumulated_results = {}
+last_send_time = start_time
 
+print(f"Round‑robin activado: {num_cams} cámaras, cada una se analiza cada {ANALYSIS_INTERVAL} s")
+print("Iniciando bucle principal...\n")
+
+# ==================== FUNCIONES AUXILIARES ====================
+def update_digital_twin_from_results(results):
+    """Actualiza el estado del gemelo digital con los resultados de clasificación.
+       No sobrescribe el estado 'reserved'."""
+    for r in results:
+        if digital_twin[r.global_id]["status"] != "reserved":
+            digital_twin[r.global_id]["status"] = r.status
+
+def assign_spot(zone_letter, required_type):
+    """Elige la plaza más cercana (menor priority) de la zona indicada,
+       que esté libre y coincida con el tipo requerido.
+       La plaza seleccionada se marca como 'reserved'.
+       Retorna el global_id o None si no hay disponible."""
+    zone_to_cameras = {
+        'A': ['cam_parking_A'],
+        'B': ['cam_parking_B'],
+        'C': ['cam_parking_CL'],
+        'D': ['cam_parking_CR']
+    }
+    cam_names = zone_to_cameras.get(zone_letter)
+    if not cam_names:
+        return None
+
+    candidates = []
+    for gid, info in digital_twin.items():
+        if info["camera"] in cam_names and info["status"] == "free":
+            if required_type is None or info["type"] == required_type:
+                candidates.append((gid, info["priority"]))
+    if not candidates:
+        return None
+    candidates.sort(key=lambda x: x[1])
+    selected_id = candidates[0][0]
+    digital_twin[selected_id]["status"] = "reserved"
+    return selected_id
+
+# ==================== BUCLE PRINCIPAL ====================
 while robot.step(timestep) != -1:
-    step_counter += 1
     current_time = robot.getTime()
 
-    if (current_time - last_time) < 1.0:
-        continue
-
-    last_time = current_time
-    print(f"\n--- Análisis en t={current_time:.2f}s ---")
-
-    all_results = {}
-
+    # --- Procesar cámaras cuyo intervalo ha vencido (round‑robin) ---
     for cam_name, cam in cameras.items():
-        img_data = cam.getImage()
-        if not img_data:
-            continue
-        w = cam.getWidth()
-        h = cam.getHeight()
-        frame_bgra = np.frombuffer(img_data, np.uint8).reshape((h, w, 4))
-        # Convertir a BGR (3 canales) para los backends
-        frame_bgr = cv2.cvtColor(frame_bgra, cv2.COLOR_BGRA2BGR)
+        if current_time - last_analysis_time[cam_name] >= ANALYSIS_INTERVAL:
+            last_analysis_time[cam_name] = current_time
 
-        spots = CAMERA_SPOTS[cam_name]
-        if not spots:
-            continue
+            img_data = cam.getImage()
+            if not img_data:
+                continue
+            w = cam.getWidth()
+            h = cam.getHeight()
+            frame_bgra = np.frombuffer(img_data, np.uint8).reshape((h, w, 4))
+            frame_bgr = cv2.cvtColor(frame_bgra, cv2.COLOR_BGRA2BGR)
 
-        try:
-            results = backend.classify_spots(frame_bgr, spots)
-        except Exception as e:
-            print(f"  Error en {cam_name}: {e}")
-            continue
+            spots = CAMERA_SPOTS[cam_name]
+            if not spots:
+                continue
 
-        # Guardar resultados de plazas
-        all_results[cam_name] = [(r.global_id, r.status) for r in results]
-
-        # --- Enviar detecciones YOLO (solo si está activo) ---
-        if yolo:
             try:
-                # Obtener detecciones de vehículos (modo visdrone)
-                detections = backend.detect_vehicles(frame_bgr)
-                # Convertir a formato serializable
-                detections_serializable = [
-                    {
-                        "bbox": list(d["bbox"]),        # [x1, y1, x2, y2]
-                        "confidence": d["confidence"],
-                        "class_name": d["class_name"]
-                    }
-                    for d in detections
-                ]
-                all_results[f"_detections_{cam_name}"] = detections_serializable
+                results = backend.classify_spots(frame_bgr, spots)
             except Exception as e:
-                print(f"  Error obteniendo detecciones YOLO en {cam_name}: {e}")
+                print(f"  Error en {cam_name}: {e}")
+                continue
 
-        # Enviar imagen de esta cámara
-        img_b64 = encode_frame_to_base64(frame_bgra)
-        all_results[f"_image_{cam_name}"] = img_b64
+            # Actualizar gemelo digital (respetando reservas)
+            update_digital_twin_from_results(results)
 
-        free_count = sum(1 for r in results if r.status == "free")
-        occ_count = len(results) - free_count
-        print(f"  {cam_name}: {free_count} libres, {occ_count} ocupadas")
+            # Guardar estado de plazas usando el estado actualizado del twin
+            accumulated_results[cam_name] = [(r.global_id, digital_twin[r.global_id]["status"]) for r in results]
 
-    if all_results:
-        message = json.dumps(all_results)
-        robot.wwiSendText(message)
+            if yolo:
+                try:
+                    detections = backend.detect_vehicles(frame_bgr)
+                    detections_serializable = [
+                        {
+                            "bbox": list(d["bbox"]),
+                            "confidence": d["confidence"],
+                            "class_name": d["class_name"]
+                        }
+                        for d in detections
+                    ]
+                    accumulated_results[f"_detections_{cam_name}"] = detections_serializable
+                except Exception as e:
+                    print(f"  Error obteniendo detecciones YOLO en {cam_name}: {e}")
+
+            img_b64 = encode_frame_to_base64(frame_bgra)
+            accumulated_results[f"_image_{cam_name}"] = img_b64
+
+            free_count = sum(1 for r in results if digital_twin[r.global_id]["status"] == "free")
+            occ_count = len(results) - free_count
+            print(f"[t={current_time:.2f}s] {cam_name}: {free_count} libres, {occ_count} ocupadas")
+
+    # --- Envío periódico de resultados (cada 1 segundo) ---
+    if current_time - last_send_time >= ANALYSIS_INTERVAL:
+        if accumulated_results:
+            # Añadir el gemelo digital completo al mensaje
+            accumulated_results["digital_twin"] = digital_twin
+            message = json.dumps(accumulated_results)
+            robot.wwiSendText(message)
+            accumulated_results = {}
+        last_send_time = current_time
+
+    # --- Atender mensajes del frontend (reservas) en cada paso ---
+    # CORRECCIÓN: manejar None y procesar TODOS los mensajes pendientes
+    while True:
+        msg = robot.wwiReceiveText()
+        if msg is None or msg == "":
+            break
+        try:
+            req = json.loads(msg)
+            if req.get("action") == "assign_spot":
+                zone = req.get("zone")
+                req_type = req.get("required_type")
+                selected_id = assign_spot(zone, req_type)
+                if selected_id is not None:
+                    response = {
+                        "action": "assign_spot_result",
+                        "spot_id": selected_id,
+                        "digital_twin": digital_twin
+                    }
+                else:
+                    response = {
+                        "action": "assign_spot_result",
+                        "error": "No available spots",
+                        "digital_twin": digital_twin
+                    }
+                robot.wwiSendText(json.dumps(response))
+        except Exception as e:
+            print(f"Error procesando mensaje: {e}", flush=True)
 
 print("Controlador finalizado.")

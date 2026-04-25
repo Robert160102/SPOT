@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Gemelo Digital del Parking</title>
+    <style>
+      body {
+        background: #1e1e1e;
+        color: white;
+        font-family: Arial;
+        padding: 20px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      th,
+      td {
+        border: 1px solid #444;
+        padding: 8px;
+        text-align: center;
+      }
+      th {
+        background: #333;
+      }
+      .free {
+        background-color: #2e7d32;
+      }
+      .occupied {
+        background-color: #c62828;
+      }
+      .reserved {
+        background-color: #8e24aa;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Gemelo Digital - Estado de todas las plazas</h2>
+    <table id="twin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Cámara</th>
+          <th>Tipo</th>
+          <th>Prioridad</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <script>
+      function updateTable(digitalTwin) {
+        const tbody = document.querySelector("#twin-table tbody");
+        tbody.innerHTML = "";
+        const sortedIds = Object.keys(digitalTwin).sort((a, b) => a - b);
+        for (const id of sortedIds) {
+          const info = digitalTwin[id];
+          const row = tbody.insertRow();
+          row.insertCell(0).innerText = id;
+          row.insertCell(1).innerText = info.camera;
+          row.insertCell(2).innerText = info.type;
+          row.insertCell(3).innerText = info.priority;
+          const statusCell = row.insertCell(4);
+          statusCell.innerText = info.status;
+          statusCell.className = info.status;
+        }
+      }
+
+      window.handleWebotsMessage = function (message) {
+        try {
+          const data = JSON.parse(message);
+          if (data.digital_twin) {
+            updateTable(data.digital_twin);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      };
+
+      window.addEventListener("message", (event) => {
+        if (event.data && event.data.type === "webots") {
+          window.handleWebotsMessage(event.data.data);
+        }
+      });
+    </script>
+  </body>
+</html>

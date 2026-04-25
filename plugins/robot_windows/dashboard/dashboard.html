@@ -22,10 +22,12 @@
     <div class="tabs">
         <button class="tab-btn active" data-tab="monitor">Monitor de Cámaras</button>
         <button class="tab-btn" data-tab="kiosk">Pantalla de Entrada</button>
+        <button class="tab-btn" data-tab="digitaltwin">Gemelo Digital</button>
     </div>
     
     <iframe id="monitor" class="content" src="../parking_monitor/parking_monitor.html" style="display:block;"></iframe>
     <iframe id="kiosk" class="content" src="../kiosk_interface/kiosk_interface.html" style="display:none;"></iframe>
+    <iframe id="digitaltwin" class="content" src="../digital_twin/digital_twin.html" style="display:none;"></iframe>
 
     <script type="module">
         import RobotWindow from 'https://cyberbotics.com/wwi/R2025a/RobotWindow.js';
@@ -35,6 +37,7 @@
         const btns = document.querySelectorAll('.tab-btn');
         const monitorFrame = document.getElementById('monitor');
         const kioskFrame = document.getElementById('kiosk');
+        const digitalTwinFrame = document.getElementById('digitaltwin');
 
         btns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -43,13 +46,15 @@
                 const tab = btn.dataset.tab;
                 monitorFrame.style.display = tab === 'monitor' ? 'block' : 'none';
                 kioskFrame.style.display = tab === 'kiosk' ? 'block' : 'none';
+                digitalTwinFrame.style.display = tab === 'digitaltwin' ? 'block' : 'none';
             });
         });
 
-        // Reenviar mensajes de Webots a los iframes activos
+        // Reenviar mensajes de Webots a TODOS los iframes
         robotWindow.receive = function(message) {
             monitorFrame.contentWindow.postMessage({type: 'webots', data: message}, '*');
             kioskFrame.contentWindow.postMessage({type: 'webots', data: message}, '*');
+            digitalTwinFrame.contentWindow.postMessage({type: 'webots', data: message}, '*');
         };
 
         // Escuchar mensajes de los iframes para enviarlos al controlador
