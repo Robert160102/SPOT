@@ -11,8 +11,8 @@ WorldInfo {
   basicTimeStep 10
 }
 Viewpoint {
-  orientation -0.2984186311860389 0.7246868096369401 0.6211081616749892 0.8022765561362707
-  position -9.995608037078439 -72.86942143845124 4.6746159253923825
+  orientation -0.08539940587626177 0.5770170541528095 -0.8122550465788411 0.42642826572210274
+  position -31.638563136151205 -60.83498528576332 7.098104026537653
 }
 TexturedBackground {
 }
@@ -21,7 +21,6 @@ TexturedBackgroundLight {
 DirectionalLight {
   ambientIntensity 1
   direction -0.5 -0.5 -1
-  castShadows TRUE
 }
 Solid {
   children [
@@ -45,6 +44,13 @@ Solid {
       }
     ]
   }
+}
+SimpleTree {
+  translation 40 44 0
+  rotation 0 0 1 1.5708
+  name "t8(2)"
+  height 6
+  radius 2.5
 }
 Solid {
   translation 0 0 0.01
@@ -269,7 +275,7 @@ Solid {
   name "cl10"
 }
 Solid {
-  translation 0 -40 0.01
+  translation 0 -45.65 0.01
   children [
     Shape {
       appearance PBRAppearance {
@@ -293,7 +299,92 @@ Solid {
   }
 }
 Solid {
-  translation -45 20 0.01
+  translation -0.370433 -67.3188 0.025
+  rotation 0 0 -1 -1.5708053071795867
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 1 1 0.6
+        roughness 0.7
+        metalness 0
+      }
+      geometry Box {
+        size 5 0.15 0.005
+      }
+    }
+  ]
+  name "cl05(5)"
+}
+Solid {
+  translation -0.370826 -23.6288 0.025
+  rotation 0 0 -1 -1.5708053071795867
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 1 1 0.6
+        roughness 0.7
+        metalness 0
+      }
+      geometry Box {
+        size 5 0.15 0.005
+      }
+    }
+  ]
+  name "cl05(2)"
+}
+Solid {
+  translation -0.370686 -39.2688 0.025
+  rotation 0 0 -1 -1.5708053071795867
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 1 1 0.6
+        roughness 0.7
+        metalness 0
+      }
+      geometry Box {
+        size 5 0.15 0.005
+      }
+    }
+  ]
+  name "cl05(3)"
+}
+Solid {
+  translation -0.370564 -53.5988 0.025
+  rotation 0 0 -1 -1.5708053071795867
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 1 1 0.6
+        roughness 0.7
+        metalness 0
+      }
+      geometry Box {
+        size 5 0.15 0.005
+      }
+    }
+  ]
+  name "cl05(4)"
+}
+Solid {
+  translation -0.370934 -11.9388 0.025
+  rotation 0 0 -1 -1.5708053071795867
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 1 1 0.6
+        roughness 0.7
+        metalness 0
+      }
+      geometry Box {
+        size 5 0.15 0.005
+      }
+    }
+  ]
+  name "cl05(1)"
+}
+Solid {
+  translation -24.08 23.02 0.01
   children [
     Shape {
       appearance PBRAppearance {
@@ -312,7 +403,7 @@ Solid {
   }
 }
 Solid {
-  translation 50 20 0.01
+  translation 67.86 22.72 0.01
   children [
     Shape {
       appearance PBRAppearance {
@@ -403,34 +494,12 @@ SimpleTree {
   radius 2.2
 }
 BmwX5 {
-  hidden position_0_0 4.203649535769938e-12
-  hidden position2_0_0 0.0003478926048545914
-  hidden position_0_1 -3.845416837816297e-12
-  hidden position2_0_1 0.00034789265105835646
-  hidden position_0_2 0.0011593677941629393
-  hidden position_0_3 0.0011593679788479182
-  hidden position_0_9 4.957841208031567e-07
-  hidden linearVelocity_0 -2.8590486619853243e-13 5.246160943464758e-08 -2.3222451794936207e-07
-  hidden angularVelocity_0 -2.0250255609393413e-07 -9.13654949282016e-13 -1.9631628633264842e-14
-  hidden rotation_1 -2.101824767884969e-12 -1 -1.2083181518416829e-08 0.0003478926044763857
-  hidden linearVelocity_1 -2.1106090523777827e-13 4.100964502489851e-08 -4.111505165238293e-07
-  hidden angularVelocity_1 -1.822075531903121e-07 -8.87681159986393e-13 -2.3304044251350134e-14
-  hidden rotation_2 -1.922708418908148e-12 0.9999999999999998 1.1053457977148381e-08 0.0003478926504308279
-  hidden linearVelocity_2 -2.085683257773081e-13 4.100975170032884e-08 -4.111502995389811e-07
-  hidden angularVelocity_2 -1.8220761499047627e-07 -8.364291176415017e-13 -2.108162566225513e-14
-  hidden rotation_3 0 -1 0 0.0011593677941132636
-  hidden linearVelocity_3 -2.3955067462501174e-13 4.055520321664131e-08 1.705722106256265e-08
-  hidden angularVelocity_3 -1.0803461985979794e-07 -8.264422956582775e-13 -2.588820089323861e-14
-  hidden rotation_4 0 1 0 0.0011593679787406054
-  hidden linearVelocity_4 -2.47644650363949e-13 4.055526700787006e-08 1.7057377950398707e-08
-  hidden angularVelocity_4 -1.0803478847940373e-07 -5.655684542581234e-13 -2.2709502839222164e-14
-  hidden translation_23 -1.693514151135389e-07 9.828940977785194e-07 -1.9008832319311608e-07
-  hidden rotation_23 0.7466598432279096 0 -0.6652060421485012 4.960094981519366e-07
-  translation -2.0498499881951977 -77.50149411753713 0.3051445716731121
-  rotation 0.005489618473732833 -0.00548959766194627 0.9999698637491646 1.5708301367468265
+  translation -2.0498499900075853 -77.50105677633042 0.3052456488124744
+  rotation 0.005506751479347194 -0.005506730621638819 0.9999696753432102 1.5708303251028644
   controller "coche_seguidor"
   sensorsSlotTop [
     Receiver {
+      channel 1
     }
     Compass {
     }
@@ -1230,40 +1299,6 @@ Solid {
   }
 }
 Solid {
-  translation -45 10 1.5
-  children [
-    Shape {
-      appearance PBRAppearance {
-        baseColor 0.05 0.35 0.7
-        roughness 0.4
-        metalness 0.1
-      }
-      geometry Box {
-        size 2.5 0.15 2
-      }
-    }
-  ]
-  name "sign_a"
-}
-Solid {
-  translation -45 10 0.7
-  rotation 1 0 0 1.5708
-  children [
-    Shape {
-      appearance PBRAppearance {
-        baseColor 0.5 0.5 0.5
-        roughness 0.8
-        metalness 0.3
-      }
-      geometry Cylinder {
-        height 1.4
-        radius 0.05
-      }
-    }
-  ]
-  name "pole_a"
-}
-Solid {
   translation 50 28 0.008
   children [
     Shape {
@@ -1286,6 +1321,37 @@ Solid {
       }
     ]
   }
+}
+Pose {
+  translation -2.17 -70.27 0
+}
+Transform {
+  translation 53.24 20.78 0.179936
+  rotation -0.5773509358554485 0.5773489358556708 0.5773509358554485 -2.094395307179586
+  scale 0.05 0.05 0.05
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColorMap ImageTexture {
+          url [
+            "../coche/textures/Standard00FF80_Base_Color.png"
+          ]
+        }
+      }
+      geometry Mesh {
+        url [
+          "../coche/source/Mercedes_G Class.obj"
+        ]
+      }
+    }
+  ]
+}
+SimpleTree {
+  translation 35 44 0
+  rotation 0 0 1 1.5708
+  name "t8(1)"
+  height 6
+  radius 2.5
 }
 Solid {
   translation 32 14 0.02
@@ -1577,25 +1643,6 @@ Solid {
   name "bc9"
 }
 Solid {
-  translation 44 21 0.06
-  children [
-    Shape {
-      appearance PBRAppearance {
-        baseColor 0.6 0.58 0.55
-        roughness 0.9
-        metalness 0
-      }
-      geometry Box {
-        size 28 0.4 0.1
-      }
-    }
-  ]
-  name "btc1"
-  boundingObject Box {
-    size 28 0.4 0.1
-  }
-}
-Solid {
   translation 44 27 0.06
   children [
     Shape {
@@ -1750,7 +1797,7 @@ Solid {
   name "bs9"
 }
 Solid {
-  translation 44 37 0.06
+  translation 44 31.04 0.06
   children [
     Shape {
       appearance PBRAppearance {
@@ -1767,40 +1814,6 @@ Solid {
   boundingObject Box {
     size 28 0.4 0.1
   }
-}
-Solid {
-  translation 50 10 1.5
-  children [
-    Shape {
-      appearance PBRAppearance {
-        baseColor 0.7 0.25 0.1
-        roughness 0.4
-        metalness 0.1
-      }
-      geometry Box {
-        size 2.5 0.15 2
-      }
-    }
-  ]
-  name "sign_b"
-}
-Solid {
-  translation 50 10 0.7
-  rotation 1 0 0 1.5708
-  children [
-    Shape {
-      appearance PBRAppearance {
-        baseColor 0.5 0.5 0.5
-        roughness 0.8
-        metalness 0.3
-      }
-      geometry Cylinder {
-        height 1.4
-        radius 0.05
-      }
-    }
-  ]
-  name "pole_b"
 }
 Solid {
   translation -18 -40 0.008
@@ -2347,40 +2360,6 @@ Solid {
   }
 }
 Solid {
-  translation 0 -26 1.5
-  children [
-    Shape {
-      appearance PBRAppearance {
-        baseColor 0.15 0.55 0.2
-        roughness 0.4
-        metalness 0.1
-      }
-      geometry Box {
-        size 2.5 0.15 2
-      }
-    }
-  ]
-  name "sign_c"
-}
-Solid {
-  translation 0 -26 0.7
-  rotation 1 0 0 1.5708
-  children [
-    Shape {
-      appearance PBRAppearance {
-        baseColor 0.5 0.5 0.5
-        roughness 0.8
-        metalness 0.3
-      }
-      geometry Cylinder {
-        height 1.4
-        radius 0.05
-      }
-    }
-  ]
-  name "pole_c"
-}
-Solid {
   translation -15 65 6
   children [
     Shape {
@@ -2484,26 +2463,6 @@ SimpleTree {
   radius 2.5
 }
 SimpleTree {
-  translation 65 15 0
-  rotation 0 0 1 1.5708
-  name "t5"
-  height 6
-  radius 2.5
-}
-SimpleTree {
-  translation 65 30 0
-  rotation 0 0 1 1.5708
-  name "t6"
-  height 7
-  radius 3
-}
-SimpleTree {
-  translation 65 42 0
-  rotation 0 0 1 1.5708
-  name "t7"
-  height 5
-}
-SimpleTree {
   translation 30 44 0
   rotation 0 0 1 1.5708
   name "t8"
@@ -2511,7 +2470,7 @@ SimpleTree {
   radius 2.5
 }
 SimpleTree {
-  translation 8 -20 0
+  translation 8 -25 0
   rotation 0 0 1 1.5708
   name "t9"
   height 5
@@ -2548,20 +2507,6 @@ SimpleTree {
   name "t14"
   height 7
   radius 3
-}
-SimpleTree {
-  translation -5 64 0
-  rotation 0 0 1 1.5708
-  name "t15"
-  height 6
-  radius 2.5
-}
-SimpleTree {
-  translation 25 64 0
-  rotation 0 0 1 1.5708
-  name "t16"
-  height 6
-  radius 2.5
 }
 SimpleTree {
   translation -32 -30 0
@@ -2628,7 +2573,7 @@ Solid {
   name "fab"
 }
 Solid {
-  translation 50 28 3
+  translation 50 27.02 3
   rotation 0 0 1 -5.307179586466759e-06
   children [
     Shape {
@@ -2646,7 +2591,7 @@ Solid {
   name "fb"
 }
 Solid {
-  translation 50 28 6.1
+  translation 50 27.02 6.1
   children [
     PointLight {
       attenuation 0 0 0.3
@@ -2668,7 +2613,7 @@ Solid {
   name "fbb"
 }
 Solid {
-  translation 0 -40 3
+  translation 17.25 -54.36 3
   rotation 0 0 1 1.5708
   children [
     Shape {
@@ -2686,7 +2631,7 @@ Solid {
   name "fc"
 }
 Solid {
-  translation 0 -40 6.1
+  translation 17.2 -54.34 6.1
   children [
     PointLight {
       attenuation 0 0 0.3
@@ -2772,7 +2717,70 @@ Robot {
   window "dashboard"
 }
 Transform {
-  translation 44.51 20.78 0.179944
+  translation 50.28 20.78 0.179936
+  rotation -0.5773509358554485 0.5773489358556708 0.5773509358554485 -2.094395307179586
+  scale 0.05 0.05 0.05
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColorMap ImageTexture {
+          url [
+            "../coche/textures/Standard00FF80_Base_Color.png"
+          ]
+        }
+      }
+      geometry Mesh {
+        url [
+          "../coche/source/Mercedes_G Class.obj"
+        ]
+      }
+    }
+  ]
+}
+Transform {
+  translation -21.27 -32.15 0.179743
+  rotation -1 1.88116e-06 1.19872e-08 -1.5708053071795867
+  scale 0.05 0.05 0.05
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColorMap ImageTexture {
+          url [
+            "../coche/textures/Standard00FF80_Base_Color.png"
+          ]
+        }
+      }
+      geometry Mesh {
+        url [
+          "../coche/source/Mercedes_G Class.obj"
+        ]
+      }
+    }
+  ]
+}
+Transform {
+  translation -43.51 11.34 0.180017
+  rotation -0.5773509358554485 0.5773489358556708 0.5773509358554485 -2.094395307179586
+  scale 0.05 0.05 0.05
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColorMap ImageTexture {
+          url [
+            "../coche/textures/Standard00FF80_Base_Color.png"
+          ]
+        }
+      }
+      geometry Mesh {
+        url [
+          "../coche/source/Mercedes_G Class.obj"
+        ]
+      }
+    }
+  ]
+}
+Transform {
+  translation -43.62 29.44 0.18006
   rotation -0.5773509358554485 0.5773489358556708 0.5773509358554485 -2.094395307179586
   scale 0.05 0.05 0.05
   children [
@@ -2793,22 +2801,16 @@ Transform {
   ]
 }
 Mavic2Pro {
-  hidden position_0_0 1.6723854693285857e-09
-  hidden linearVelocity_0 -1.7776500332642707e-10 9.83018099616613e-07 1.5504149715926222e-13
-  hidden angularVelocity_0 6.662141391761569e-13 -9.4191376688574e-14 -4.159660043593287e-11
-  hidden position_5_0 -3.9091424671988455e-09
-  hidden linearVelocity_5 -1.7259225747320984e-10 9.830757993233872e-07 4.306015004022515e-12
-  hidden angularVelocity_5 9.012567277949636e-13 -1.3333451608018735e-09 1.89770123888535e-08
-  hidden position_6_0 -1.4815724746357353e-09
-  hidden linearVelocity_6 -1.372007972246404e-10 9.828866339243682e-07 -1.3613643079035205e-10
-  hidden angularVelocity_6 5.107763247059663e-08 -1.3252244852836768e-09 1.897693913725572e-08
-  hidden linearVelocity_7 -1.3938479412805483e-10 9.831693559079137e-07 -7.130927480135071e-11
-  hidden angularVelocity_7 5.1079978549263436e-08 -1.6104742425386423e-08 1.794085116191163e-08
-  translation -1.9999992933523707 -70.01596490879291 0.18563492038078827
-  rotation 0.034966258487299395 -0.03495930800068378 0.9987768557348097 1.5721791121291064
+  translation -1.9999992648186946 -70.01594629860413 0.18572588311998886
+  rotation 0.03482339110385022 -0.034816020196837445 0.998786852221074 1.5721690266891188
   controller "dron_controller"
   cameraSlot [
     Camera {
+      children [
+        Emitter {
+          channel 1
+        }
+      ]
       width 400
       height 240
       near 0.2
