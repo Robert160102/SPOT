@@ -1,49 +1,84 @@
 #VRML_SIM R2025a utf8
 
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/trees/protos/SimpleTree.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/vehicles/protos/bmw/BmwX5.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/Floor.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/appearances/protos/SandyGround.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/buildings/protos/Windmill.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/manhole/protos/SquareManhole.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/trees/protos/Pine.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/dji/mavic/protos/Mavic2Pro.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/vehicles/protos/bmw/BmwX5.proto"
 
 WorldInfo {
-  title "Parking Zones - Spot Navigation"
-  basicTimeStep 10
+  info [
+    "This demonstration shows a DJI Mavic 2 PRO flying over a rural area."
+    "After the drone has taken off, you can control it with the keyboard of your computer."
+  ]
+  title "DJI Mavic 2 PRO demo"
+  basicTimeStep 8
+  defaultDamping Damping {
+    linear 0.5
+    angular 0.5
+  }
 }
 Viewpoint {
-  orientation -0.08539940587626177 0.5770170541528095 -0.8122550465788411 0.42642826572210274
-  position -31.638563136151205 -60.83498528576332 7.098104026537653
+  orientation -0.08207987293766045 0.9745840908740364 0.2084436237301717 0.4242512279221792
+  position -18.671668019682688 -70.65587700596188 8.747660848070419
+  near 0.2
+  follow "Mavic 2 PRO"
+  followSmoothness 0.2
 }
 TexturedBackground {
+  luminosity 3
 }
 TexturedBackgroundLight {
 }
-DirectionalLight {
-  ambientIntensity 1
-  direction -0.5 -0.5 -1
+Floor {
+  size 400 400
+  tileSize 6 6
+  appearance SandyGround {
+  }
 }
-Solid {
-  children [
-    DEF GROUND Shape {
-      appearance PBRAppearance {
-        baseColor 0.38 0.52 0.28
-        roughness 1
-        metalness 0
-      }
-      geometry Box {
-        size 500 500 0.01
-      }
+Windmill {
+  translation -43.8656 -19.8433 0
+  rotation -7.19228e-09 2.6842e-08 1 0.523601
+}
+Windmill {
+  translation -44.258 -27.3356 0
+  rotation -7.19228e-09 2.6842e-08 1 0.523601
+  name "windmill(1)"
+}
+SquareManhole {
+  translation -2.08 -71.78 0
+}
+Pine {
+  translation -14.0083 -14.4828 0
+  rotation 0 0 1 2.61799
+}
+Pine {
+  translation -19.6195 -24.3783 0
+  rotation 0 0 1 2.87979
+  name "pine tree(1)"
+}
+Pine {
+  translation -10.6926 -25.1339 0
+  name "pine tree(4)"
+}
+Pine {
+  translation -26.6328 -7.1707 0
+  name "pine tree(6)"
+}
+Mavic2Pro {
+  translation -2.37013 -71.69 0.24
+  rotation 0 0 -1 -1.5707953071795862
+  cameraSlot [
+    Camera {
+      width 400
+      height 240
+      near 0.2
     }
   ]
-  name "ground"
-  boundingObject Pose {
-    translation 0 0 -0.5
-    children [
-      Box {
-        size 500 500 1
-      }
-    ]
-  }
 }
 SimpleTree {
   translation 40 44 0
@@ -2797,23 +2832,6 @@ Transform {
           "../coche/source/Mercedes_G Class.obj"
         ]
       }
-    }
-  ]
-}
-Mavic2Pro {
-  translation -1.9999992648186946 -70.01594629860413 0.18572588311998886
-  rotation 0.03482339110385022 -0.034816020196837445 0.998786852221074 1.5721690266891188
-  controller "dron_controller"
-  cameraSlot [
-    Camera {
-      children [
-        Emitter {
-          channel 1
-        }
-      ]
-      width 400
-      height 240
-      near 0.2
     }
   ]
 }
