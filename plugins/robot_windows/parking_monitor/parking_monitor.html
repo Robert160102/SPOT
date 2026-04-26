@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Monitor de Parking - 4 Cámaras</title>
+    <title>Parking Monitor - 4 Cameras</title>
     <style>
       * {
         box-sizing: border-box;
@@ -87,12 +87,12 @@
     </style>
   </head>
   <body>
-    <h1>MONITOR DE PARKING - 4 CÁMARAS</h1>
+    <h1>PARKING MONITOR - 4 CAMERAS</h1>
 
     <div class="mosaic">
       <!-- Cámara A -->
       <div class="cam-panel">
-        <div class="cam-title">Zona A (Noroeste)</div>
+        <div class="cam-title">Zone A (Northwest)</div>
         <div class="cam-view" id="view-A">
           <canvas id="cam-A-image" width="640" height="480"></canvas>
           <canvas
@@ -111,7 +111,7 @@
       </div>
       <!-- Cámara B -->
       <div class="cam-panel">
-        <div class="cam-title">Zona B (Noreste)</div>
+        <div class="cam-title">Zone B (Northeast)</div>
         <div class="cam-view" id="view-B">
           <canvas id="cam-B-image" width="640" height="480"></canvas>
           <canvas
@@ -130,7 +130,7 @@
       </div>
       <!-- Cámara CL -->
       <div class="cam-panel">
-        <div class="cam-title">Zona C Izquierda (Suroeste)</div>
+        <div class="cam-title">Zone C Left (Southwest)</div>
         <div class="cam-view" id="view-CL">
           <canvas id="cam-CL-image" width="640" height="480"></canvas>
           <canvas
@@ -149,7 +149,7 @@
       </div>
       <!-- Cámara CR -->
       <div class="cam-panel">
-        <div class="cam-title">Zona C Derecha (Sureste)</div>
+        <div class="cam-title">Zone C Right (Southeast)</div>
         <div class="cam-view" id="view-CR">
           <canvas id="cam-CR-image" width="640" height="480"></canvas>
           <canvas
@@ -169,7 +169,7 @@
     </div>
 
     <div class="debug-info" id="debug-info">
-      Ventana lista. Esperando datos...
+      UI ready. Waiting for data...
     </div>
 
     <script>
