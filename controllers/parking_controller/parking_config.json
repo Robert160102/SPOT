@@ -7,8 +7,17 @@
       "reference_image": "cam_parking_A.png",
       "spot_width": 107,
       "spot_height": 48,
-      "world_position": [-53.11, 26.99, 25],
-      "rotation": [0, 1, 0, 1.5707996938995747],
+      "world_position": [
+        -53.11,
+        26.99,
+        25
+      ],
+      "rotation": [
+        0,
+        1,
+        0,
+        1.5707996938995747
+      ],
       "fov": 1.2,
       "image_width": 640,
       "image_height": 480,
@@ -214,8 +223,17 @@
       "reference_image": "cam_parking_B.png",
       "spot_width": 48,
       "spot_height": 107,
-      "world_position": [44.15, 23.98, 25],
-      "rotation": [0.5773489358556708, -0.5773509358554485, -0.5773509358554485, -2.094395307179586],
+      "world_position": [
+        44.15,
+        23.98,
+        25
+      ],
+      "rotation": [
+        0.5773489358556708,
+        -0.5773509358554485,
+        -0.5773509358554485,
+        -2.094395307179586
+      ],
       "fov": 1.2,
       "image_width": 640,
       "image_height": 480,
@@ -229,37 +247,37 @@
         {
           "x": 154,
           "y": 374,
-          "type": "normal",
+          "type": "electric",
           "priority": 14
         },
         {
           "x": 210,
           "y": 373,
-          "type": "normal",
+          "type": "electric",
           "priority": 9
         },
         {
           "x": 265,
           "y": 373,
-          "type": "normal",
+          "type": "handicap",
           "priority": 7
         },
         {
           "x": 321,
           "y": 372,
-          "type": "normal",
+          "type": "handicap",
           "priority": 5
         },
         {
           "x": 377,
           "y": 373,
-          "type": "normal",
+          "type": "handicap",
           "priority": 4
         },
         {
           "x": 432,
           "y": 372,
-          "type": "normal",
+          "type": "handicap",
           "priority": 2
         },
         {
@@ -283,37 +301,37 @@
         {
           "x": 210,
           "y": 189,
-          "type": "normal",
+          "type": "electric",
           "priority": 13
         },
         {
           "x": 265,
           "y": 188,
-          "type": "normal",
+          "type": "electric",
           "priority": 12
         },
         {
           "x": 323,
           "y": 187,
-          "type": "normal",
+          "type": "electric",
           "priority": 11
         },
         {
           "x": 378,
           "y": 187,
-          "type": "normal",
+          "type": "handicap",
           "priority": 8
         },
         {
           "x": 434,
           "y": 189,
-          "type": "normal",
+          "type": "handicap",
           "priority": 6
         },
         {
           "x": 490,
           "y": 187,
-          "type": "normal",
+          "type": "handicap",
           "priority": 3
         },
         {
@@ -349,19 +367,19 @@
         {
           "x": 208,
           "y": 0,
-          "type": "normal",
+          "type": "electric",
           "priority": 15
         },
         {
           "x": 154,
           "y": 0,
-          "type": "normal",
+          "type": "electric",
           "priority": 16
         },
         {
           "x": 95,
           "y": 1,
-          "type": "normal",
+          "type": "electric",
           "priority": 10
         }
       ]
@@ -373,8 +391,17 @@
       "reference_image": "cam_parking_CL.png",
       "spot_width": 128,
       "spot_height": 63,
-      "world_position": [-15.94, -38.99, 20],
-      "rotation": [0.5773489358556708, -0.5773509358554485, -0.5773509358554485, -2.094395307179586],
+      "world_position": [
+        -15.94,
+        -38.99,
+        20
+      ],
+      "rotation": [
+        0.5773489358556708,
+        -0.5773509358554485,
+        -0.5773509358554485,
+        -2.094395307179586
+      ],
       "fov": 1.2,
       "image_width": 640,
       "image_height": 480,
@@ -382,73 +409,73 @@
         {
           "x": 68,
           "y": 32,
-          "type": "normal",
+          "type": "handicap",
           "priority": 12
         },
         {
           "x": 69,
           "y": 102,
-          "type": "normal",
+          "type": "handicap",
           "priority": 11
         },
         {
           "x": 69,
           "y": 172,
-          "type": "normal",
+          "type": "handicap",
           "priority": 10
         },
         {
           "x": 69,
           "y": 243,
-          "type": "normal",
+          "type": "handicap",
           "priority": 6
         },
         {
           "x": 69,
           "y": 313,
-          "type": "normal",
+          "type": "handicap",
           "priority": 5
         },
         {
           "x": 71,
           "y": 383,
-          "type": "normal",
+          "type": "handicap",
           "priority": 4
         },
         {
           "x": 393,
           "y": 32,
-          "type": "normal",
+          "type": "handicap",
           "priority": 9
         },
         {
           "x": 393,
           "y": 102,
-          "type": "normal",
+          "type": "handicap",
           "priority": 8
         },
         {
           "x": 393,
           "y": 173,
-          "type": "normal",
+          "type": "handicap",
           "priority": 7
         },
         {
           "x": 393,
           "y": 244,
-          "type": "normal",
+          "type": "handicap",
           "priority": 3
         },
         {
           "x": 393,
           "y": 314,
-          "type": "normal",
+          "type": "handicap",
           "priority": 2
         },
         {
           "x": 391,
           "y": 384,
-          "type": "normal",
+          "type": "handicap",
           "priority": 1
         }
       ]
@@ -460,8 +487,17 @@
       "reference_image": "cam_parking_CR.png",
       "spot_width": 128,
       "spot_height": 63,
-      "world_position": [16.08, -38.76, 20],
-      "rotation": [0.5773489358556708, -0.5773509358554485, -0.5773509358554485, -2.094395307179586],
+      "world_position": [
+        16.08,
+        -38.76,
+        20
+      ],
+      "rotation": [
+        0.5773489358556708,
+        -0.5773509358554485,
+        -0.5773509358554485,
+        -2.094395307179586
+      ],
       "fov": 1.2,
       "image_width": 640,
       "image_height": 480,
@@ -469,72 +505,73 @@
         {
           "x": 115,
           "y": 37,
-          "type": "normal",
+          "type": "electric",
           "priority": 9
         },
         {
           "x": 115,
           "y": 108,
-          "type": "normal",
+          "type": "electric",
           "priority": 8
         },
         {
           "x": 114,
           "y": 178,
-          "type": "normal",
+          "type": "electric",
           "priority": 7
         },
         {
           "x": 115,
           "y": 248,
-          "type": "normal",
+          "type": "electric",
           "priority": 3
         },
         {
           "x": 115,
           "y": 318,
-          "type": "normal",
+          "type": "electric",
           "priority": 2
         },
         {
           "x": 116,
           "y": 389,
-          "type": "normal",
+          "type": "electric",
           "priority": 1
         },
         {
           "x": 439,
           "y": 389,
-          "type": "normal",
+          "type": "electric",
           "priority": 12
         },
         {
           "x": 439,
-          "y": 318,"type": "normal",
+          "y": 318,
+          "type": "electric",
           "priority": 11
         },
         {
           "x": 441,
           "y": 247,
-          "type": "normal",
+          "type": "electric",
           "priority": 10
         },
         {
           "x": 440,
           "y": 178,
-          "type": "normal",
+          "type": "electric",
           "priority": 6
         },
         {
           "x": 438,
           "y": 108,
-          "type": "normal",
+          "type": "electric",
           "priority": 5
         },
         {
           "x": 440,
           "y": 37,
-          "type": "normal",
+          "type": "electric",
           "priority": 4
         }
       ]

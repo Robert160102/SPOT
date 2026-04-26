@@ -11,8 +11,11 @@ dev = True
 # PARAMETROS
 # =========================
 
-DISTANCIA_FRENADO = 1.5
-DISTANCIA_PARADA = 0.5
+# El supervisor envia targets densificados con lookahead, asi que el coche solo
+# entra en la zona de frenado al final (sobre la plaza). Con estos valores se
+# acerca mejor al centro de la plaza antes de detenerse.
+DISTANCIA_FRENADO = 1.0
+DISTANCIA_PARADA = 0.3
 
 VELOCIDAD_CRUCERO = 6.0  # m/s
 
@@ -190,9 +193,9 @@ while driver.step() != -1:
         brake_cmd = 1.0
     elif distancia < DISTANCIA_FRENADO:
         driver.setCruisingSpeed(0.0)
-        driver.setBrakeIntensity(0.4)
+        driver.setBrakeIntensity(0.2)
         speed_cmd = 0.0
-        brake_cmd = 0.4
+        brake_cmd = 0.2
     else:
         driver.setBrakeIntensity(0.0)
         driver.setCruisingSpeed(speed_cmd)

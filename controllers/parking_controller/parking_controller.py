@@ -21,7 +21,22 @@ MIN_DIST = 1.5
 ARRIVAL_RADIUS = 3.0
 SPOT_ARRIVAL_RADIUS = 1.0
 HOME_ARRIVAL_RADIUS = 1.0
-CAR_PARK_RADIUS = 0.6
+CAR_PARK_RADIUS = 2.5            # margen tolerante: el coche frena 0.5-1.2 m antes del centro
+
+# === Seguimiento fluido del coche ===
+# El coche persigue un punto proyectado sobre la ruta a CAR_FOLLOW_DISTANCE metros
+# por DETRAS del dron (medido a lo largo del path). De esa forma:
+#  - si el dron va rapido, el target avanza rapido y el coche acelera
+#  - si el dron se para (hover, ascenso), el target se queda fijo y el coche frena
+#  - el coche nunca rebasa al dron porque su target esta SIEMPRE detras
+CAR_WP_SPACING = 1.5             # densificacion de la ruta del coche (m entre puntos)
+CAR_FOLLOW_DISTANCE = 8.0        # m de separacion ideal coche-dron a lo largo del path
+CAR_FOLLOW_DISTANCE_FINAL = 0.0  # cuando mission_state pasa a "parking" se anula la separacion
+
+# === Deteccion de coche aparcado ===
+CAR_PARKED_DIST_TOL = 3.5        # m al centro de la plaza para considerar "candidato"
+CAR_PARKED_MOVE_TOL = 0.05       # m de variacion maxima para considerarlo quieto
+CAR_PARKED_HOLD_TIME = 1.5       # s parado consecutivos para confirmar aparcamiento
 
 
 def encode_frame_to_base64(frame_bgra: np.ndarray) -> str:
@@ -212,6 +227,34 @@ def build_return_plan(current_xy, home_xy):
     return waypoints
 
 
+def densify_xy_path(points, max_spacing=CAR_WP_SPACING):
+    """Devuelve una lista densificada de puntos (x, y) con separacion <= max_spacing.
+
+    Mantiene los extremos y los nodos del grafo intactos, insertando puntos
+    interpolados linealmente cuando la distancia entre dos consecutivos es mayor
+    que max_spacing. Imprescindible para que el coche reciba targets continuos
+    y no se quede esperando entre nodos del grafo de carreteras.
+    """
+    if not points:
+        return []
+    out = [tuple(points[0])]
+    for i in range(1, len(points)):
+        prev = out[-1]
+        curr = tuple(points[i])
+        dx = curr[0] - prev[0]
+        dy = curr[1] - prev[1]
+        seg = math.hypot(dx, dy)
+        if seg <= max_spacing or seg < 1e-6:
+            out.append(curr)
+            continue
+        n_segments = int(math.ceil(seg / max_spacing))
+        for j in range(1, n_segments):
+            t = j / n_segments
+            out.append((prev[0] + dx * t, prev[1] + dy * t))
+        out.append(curr)
+    return out
+
+
 # ==================== SUPERVISOR ====================
 robot = Supervisor()
 timestep = int(robot.getBasicTimeStep())
@@ -361,45 +404,96 @@ last_send_time = start_time
 mission_state = "idle"
 current_spot_id = None
 spot_world_xy = None
-car_waypoints = []          # (x,y) para el coche (desde access_south en adelante)
+car_waypoints = []          # (x,y) DENSIFICADOS para el coche (desde access_south en adelante)
 drone_waypoints = []        # [x,y,z] completo (sin duplicados)
 drone_wp_index = 0          # índice del dron en drone_waypoints
 current_car_target = None   # destino actual enviado al coche
 access_south_idx = None     # se calculará en start_mission
 
+# Estado del seguimiento fluido del coche
+drone_path_idx = 0          # proyeccion (no decreciente) de la xy del dron sobre car_waypoints
+
+# Estado para deteccion de coche aparcado (estacionario cerca de la plaza)
+car_last_xy = None
+car_still_since = None
+
+
+ZONE_TO_CAMERAS = {
+    'A': ['cam_parking_A'],
+    'B': ['cam_parking_B'],
+    'C': ['cam_parking_CL'],
+    'D': ['cam_parking_CR'],
+}
+
 
 def assign_spot(zone_letter, required_type):
-    zone_to_cameras = {
-        'A': ['cam_parking_A'],
-        'B': ['cam_parking_B'],
-        'C': ['cam_parking_CL'],
-        'D': ['cam_parking_CR']
-    }
-    cam_names = zone_to_cameras.get(zone_letter)
+    """Selecciona la mejor plaza libre de la zona pedida que cumpla el tipo.
+
+    Devuelve (selected_id, error). Si selected_id es None, error es un string
+    descriptivo ("invalid_zone", "no_type_in_zone", "all_occupied").
+    Acepta required_type en {None, "normal", "electric", "handicap"}; las
+    cadenas vacias se tratan como None (cualquier tipo).
+    """
+    if required_type in ("", "any"):
+        required_type = None
+
+    cam_names = ZONE_TO_CAMERAS.get(zone_letter)
     if not cam_names:
-        return None
-    candidates = []
-    for gid, info in digital_twin.items():
-        if info["camera"] in cam_names and info["status"] == "free":
-            if required_type is None or info["type"] == required_type:
-                candidates.append((gid, info["priority"]))
+        print(f"[assign] zona '{zone_letter}' desconocida")
+        return None, "invalid_zone"
+
+    # Plazas de la zona (independientemente del estado) para distinguir errores
+    zone_spots = [(gid, info) for gid, info in digital_twin.items()
+                  if info["camera"] in cam_names]
+
+    # Filtrar por tipo (si se pide uno concreto)
+    if required_type is None:
+        type_spots = zone_spots
+    else:
+        type_spots = [(gid, info) for gid, info in zone_spots
+                      if info["type"] == required_type]
+
+    if not type_spots:
+        print(f"[assign] zona {zone_letter}: no hay plazas de tipo '{required_type}'")
+        return None, "no_type_in_zone"
+
+    candidates = [(gid, info["priority"]) for gid, info in type_spots
+                  if info["status"] == "free"]
     if not candidates:
-        return None
+        print(f"[assign] zona {zone_letter} tipo {required_type}: todas ocupadas/reservadas")
+        return None, "all_occupied"
+
     candidates.sort(key=lambda x: x[1])
     selected_id = candidates[0][0]
     digital_twin[selected_id]["status"] = "reserved"
-    return selected_id
+    print(f"[assign] zona {zone_letter} tipo {required_type} -> plaza {selected_id} "
+          f"(priority {digital_twin[selected_id]['priority']})")
+    return selected_id, None
 
 
 def update_digital_twin_from_results(results):
+    """Refresca el estado de cada plaza con lo que ve la camara.
+
+    Reglas:
+    - "reserved" SIEMPRE se respeta (lo gestiona el supervisor durante la mision;
+      la camara podria ver el coche pasando por encima y no debe pisarlo).
+    - "occupied" puede volver a "free" cuando la camara deja de ver vehiculo,
+      o seguir como "occupied" si lo sigue viendo. Esto evita que una plaza
+      quede congelada como ocupada solo porque el coche del usuario paso por
+      encima en su trayecto.
+    - La plaza realmente aparcada permanece "occupied" mientras el coche siga
+      fisicamente alli (la camara lo seguira viendo).
+    """
     for r in results:
-        if digital_twin[r.global_id]["status"] not in ("reserved", "occupied"):
-            digital_twin[r.global_id]["status"] = r.status
+        if digital_twin[r.global_id]["status"] == "reserved":
+            continue
+        digital_twin[r.global_id]["status"] = r.status
 
 
 def start_mission(spot_id):
     global mission_state, current_spot_id, spot_world_xy
     global drone_waypoints, car_waypoints, drone_wp_index, current_car_target, access_south_idx
+    global drone_path_idx, car_last_xy, car_still_since
 
     info = digital_twin[spot_id]
     spot_world_xy = (info["world_x"], info["world_y"])
@@ -420,11 +514,17 @@ def start_mission(spot_id):
         print("ERROR: no se encontró access_south en el plan de vuelo")
         access_south_idx = 1   # fallback
 
-    # Ruta del coche desde access_south en adelante
-    car_waypoints = [(pt[0], pt[1]) for pt in drone_waypoints[access_south_idx:]]
+    # Ruta del coche desde access_south en adelante, DENSIFICADA para seguimiento fluido
+    raw_car_path = [(pt[0], pt[1]) for pt in drone_waypoints[access_south_idx:]]
+    car_waypoints = densify_xy_path(raw_car_path, max_spacing=CAR_WP_SPACING)
+    print(f"  Ruta coche: {len(raw_car_path)} nodos -> {len(car_waypoints)} waypoints densificados")
 
     drone_wp_index = 0
-    current_car_target = car_waypoints[0]   # access_south
+    drone_path_idx = 0
+    car_last_xy = None
+    car_still_since = None
+    # Inicialmente el target esta al inicio de la ruta del coche (zona de salida)
+    current_car_target = car_waypoints[0]
 
     send_drone_waypoints(drone_waypoints)
     if dev:
@@ -434,34 +534,95 @@ def start_mission(spot_id):
     mission_state = "approaching"
 
 
-def track_drone_and_update_car():
-    global drone_wp_index, current_car_target, access_south_idx
+def _project_xy_onto_path(xy, path, start_idx=0):
+    """Indice del waypoint mas cercano a xy a partir de start_idx (no retrocede)."""
+    best_i = start_idx
+    best_d = float('inf')
+    # Pequena ventana de busqueda hacia adelante para acelerar
+    for i in range(start_idx, len(path)):
+        d = math.hypot(xy[0] - path[i][0], xy[1] - path[i][1])
+        if d < best_d:
+            best_d = d
+            best_i = i
+        elif d > best_d + CAR_WP_SPACING * 4:
+            break
+    return best_i
 
+
+def _point_back_along_path(path, ref_idx, distance_back):
+    """Devuelve un (x, y) que esta `distance_back` metros antes de path[ref_idx]
+    siguiendo el path hacia atras. Si no hay suficiente longitud, devuelve path[0]."""
+    if ref_idx <= 0 or distance_back <= 0:
+        return path[max(0, ref_idx)]
+    remaining = distance_back
+    i = ref_idx
+    while i > 0 and remaining > 0:
+        ax, ay = path[i - 1]
+        bx, by = path[i]
+        seg = math.hypot(bx - ax, by - ay)
+        if seg <= 0:
+            i -= 1
+            continue
+        if seg >= remaining:
+            t = remaining / seg
+            return (bx - (bx - ax) * t, by - (by - ay) * t)
+        remaining -= seg
+        i -= 1
+    return path[0]
+
+
+def track_drone_and_update_car():
+    """Avanza el indice del dron por waypoints (solo a efectos de logging interno)."""
+    global drone_wp_index
     if mission_state != "approaching":
         return
     if drone_wp_index >= len(drone_waypoints) - 1:
         return
-    if access_south_idx is None:
-        return
-
     target_wp = drone_waypoints[drone_wp_index + 1]
     tx, ty, _ = target_wp
     dx, dy, _ = drone_xyz()
     dist = math.hypot(dx - tx, dy - ty)
-
     if dist < ARRIVAL_RADIUS:
         drone_wp_index += 1
-        # Solo actualizamos el destino del coche cuando el dron ya ha pasado access_south
-        if drone_wp_index > access_south_idx:
-            car_idx = drone_wp_index - access_south_idx
-            if 0 <= car_idx < len(car_waypoints):
-                current_car_target = car_waypoints[car_idx]
-                if dev:
-                    print(f"[supervisor] Coche -> waypoint {drone_wp_index}: {current_car_target}")
+
+
+def update_car_following():
+    """Actualiza current_car_target cada step.
+
+    Estrategia: el coche persigue un punto sobre el path densificado situado
+    CAR_FOLLOW_DISTANCE metros DETRAS de la proyeccion del dron sobre el path.
+
+    - Mientras el dron avanza, el target avanza con el (separacion ~constante).
+    - Si el dron se queda quieto (ascenso, hover, frenazo), el target se queda
+      fijo y el coche frena por su propia logica de DISTANCIA_FRENADO/PARADA.
+    - El target NUNCA esta por delante del dron, asi que el coche no rebasa.
+    - En "parking"/"returning" el target pasa a ser la plaza (ultimo wp).
+    """
+    global current_car_target, drone_path_idx
+
+    if mission_state == "idle" or not car_waypoints:
+        return
+
+    if mission_state == "approaching":
+        dx, dy, _ = drone_xyz()
+        drone_path_idx = _project_xy_onto_path((dx, dy), car_waypoints, drone_path_idx)
+        # Si el dron aun no ha entrado en el path del coche (esta despegando),
+        # mandamos al coche al primer wp con calma.
+        if drone_path_idx <= 0:
+            current_car_target = car_waypoints[0]
+            return
+        current_car_target = _point_back_along_path(
+            car_waypoints, drone_path_idx, CAR_FOLLOW_DISTANCE
+        )
+    else:
+        # parking / returning: el coche entra a la plaza.
+        current_car_target = car_waypoints[-1]
 
 
 def update_mission():
-    global mission_state, current_spot_id
+    global mission_state, current_spot_id, current_car_target, access_south_idx
+    global drone_wp_index, drone_path_idx
+    global car_last_xy, car_still_since
     if mission_state == "idle":
         return
     dx, dy, dz = drone_xyz()
@@ -472,12 +633,40 @@ def update_mission():
         if d_xy < SPOT_ARRIVAL_RADIUS and d_z < 1.0:
             print("Dron sobre plaza. Iniciando retorno y esperando al coche.")
             mission_state = "parking"
+            # Reiniciar tracking de "coche quieto"
+            car_last_xy = None
+            car_still_since = None
             send_drone_waypoints(build_return_plan((dx, dy), HOME_XY))
     elif mission_state == "parking":
         cx, cy = car_xy()
         d_car = math.hypot(cx - spot_world_xy[0], cy - spot_world_xy[1])
-        if d_car < CAR_PARK_RADIUS:
-            print(f"Coche aparcado en plaza {current_spot_id}.")
+        now = robot.getTime()
+
+        # Criterio 1: el coche entra dentro del radio "amplio" del spot
+        parked_by_radius = d_car < CAR_PARK_RADIUS
+
+        # Criterio 2: el coche se ha quedado quieto cerca de la plaza
+        parked_by_still = False
+        if d_car < CAR_PARKED_DIST_TOL:
+            if car_last_xy is None:
+                car_last_xy = (cx, cy)
+                car_still_since = now
+            else:
+                moved = math.hypot(cx - car_last_xy[0], cy - car_last_xy[1])
+                if moved < CAR_PARKED_MOVE_TOL:
+                    if car_still_since is not None and (now - car_still_since) >= CAR_PARKED_HOLD_TIME:
+                        parked_by_still = True
+                else:
+                    # se ha movido, reiniciar contador
+                    car_last_xy = (cx, cy)
+                    car_still_since = now
+        else:
+            car_last_xy = None
+            car_still_since = None
+
+        if parked_by_radius or parked_by_still:
+            reason = "radio" if parked_by_radius else "estacionario"
+            print(f"Coche aparcado en plaza {current_spot_id} (criterio: {reason}, d={d_car:.2f} m).")
             digital_twin[current_spot_id]["status"] = "occupied"
             mission_state = "returning"
     elif mission_state == "returning":
@@ -491,6 +680,9 @@ def update_mission():
             drone_wp_index = 0
             current_car_target = None
             access_south_idx = None
+            drone_path_idx = 0
+            car_last_xy = None
+            car_still_since = None
 
 
 print("Iniciando bucle principal...\nMesaje importante: para mandar el dron y el coche a la plaza, seleccionar una zona en la interfaz web.\n")
@@ -546,6 +738,7 @@ while robot.step(timestep) != -1:
         last_send_time = current_time
 
     track_drone_and_update_car()
+    update_car_following()
     update_mission()
 
     if current_car_target is not None:
@@ -565,21 +758,27 @@ while robot.step(timestep) != -1:
             if req.get("action") == "assign_spot":
                 if mission_state != "idle":
                     response = {"action": "assign_spot_result",
-                                "error": "drone busy",
+                                "error": "drone_busy",
                                 "digital_twin": digital_twin}
                     robot.wwiSendText(json.dumps(response))
                     continue
                 zone = req.get("zone")
                 req_type = req.get("required_type")
-                selected_id = assign_spot(zone, req_type)
+                print(f"[supervisor] Solicitud: zona={zone} tipo={req_type}")
+                selected_id, err = assign_spot(zone, req_type)
                 if selected_id is not None:
                     start_mission(selected_id)
                     response = {"action": "assign_spot_result",
                                 "spot_id": selected_id,
+                                "zone": zone,
+                                "required_type": req_type,
                                 "digital_twin": digital_twin}
                 else:
+                    # err in {"invalid_zone", "no_type_in_zone", "all_occupied"}
                     response = {"action": "assign_spot_result",
-                                "error": "No available spots",
+                                "error": err or "no_available_spots",
+                                "zone": zone,
+                                "required_type": req_type,
                                 "digital_twin": digital_twin}
                 robot.wwiSendText(json.dumps(response))
         except Exception as e:

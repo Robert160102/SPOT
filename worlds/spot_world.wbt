@@ -24,8 +24,8 @@ WorldInfo {
   }
 }
 Viewpoint {
-  orientation -0.1085299680364917 0.8931883000129612 0.4363896272346011 0.3033298603799104
-  position -43.839079923289276 -72.18986917525112 20.964331190089062
+  orientation 0.2432610206695297 0.6081993978609113 -0.7555908735979039 1.0307655353337213
+  position -45.97057021078713 -16.008548805393787 50.916353496183405
   near 0.2
   follow "Mavic 2 PRO"
   followSmoothness 0.2
@@ -58,12 +58,12 @@ Pine {
   rotation 0 0 1 2.61799
 }
 Pine {
-  translation -19.6195 -24.3783 0
+  translation -18.0167 -18.3985 0
   rotation 0 0 1 2.87979
   name "pine tree(1)"
 }
 Pine {
-  translation -10.6926 -25.1339 0
+  translation -10.6926 -20.7339 0
   name "pine tree(4)"
 }
 Pine {
@@ -114,44 +114,6 @@ Solid {
         size 220 10 1
       }
     ]
-  }
-}
-Solid {
-  translation 0 5.3 0.06
-  children [
-    Shape {
-      appearance PBRAppearance {
-        baseColor 0.72 0.7 0.66
-        roughness 0.85
-        metalness 0
-      }
-      geometry Box {
-        size 220 0.6 0.12
-      }
-    }
-  ]
-  name "curb_n"
-  boundingObject Box {
-    size 220 0.6 0.12
-  }
-}
-Solid {
-  translation 0 -5.3 0.06
-  children [
-    Shape {
-      appearance PBRAppearance {
-        baseColor 0.72 0.7 0.66
-        roughness 0.85
-        metalness 0
-      }
-      geometry Box {
-        size 220 0.6 0.12
-      }
-    }
-  ]
-  name "curb_s"
-  boundingObject Box {
-    size 220 0.6 0.12
   }
 }
 Solid {
@@ -315,7 +277,7 @@ Solid {
   name "cl10"
 }
 Solid {
-  translation 0 -45.65 0.01
+  translation 0 -44.93 0.01
   children [
     Shape {
       appearance PBRAppearance {
@@ -339,7 +301,7 @@ Solid {
   }
 }
 Solid {
-  translation -0.370433 -67.3188 0.025
+  translation -0.38043 -67.3188 0.025
   rotation 0 0 -1 -1.5708053071795867
   children [
     Shape {
@@ -349,7 +311,7 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 5 0.15 0.005
+        size 4 0.15 0.005
       }
     }
   ]
@@ -424,7 +386,7 @@ Solid {
   name "cl05(1)"
 }
 Solid {
-  translation -24.08 23.02 0.01
+  translation 65.49 22.72 0.01
   children [
     Shape {
       appearance PBRAppearance {
@@ -433,36 +395,36 @@ Solid {
         metalness 0
       }
       geometry Box {
-        size 8 35 0.02
-      }
-    }
-  ]
-  name "road_to_a"
-  boundingObject Box {
-    size 8 35 0.02
-  }
-}
-Solid {
-  translation 67.86 22.72 0.01
-  children [
-    Shape {
-      appearance PBRAppearance {
-        baseColor 0.18 0.18 0.18
-        roughness 0.95
-        metalness 0
-      }
-      geometry Box {
-        size 8 35 0.02
+        size 14 47 0.02
       }
     }
   ]
   name "road_to_b"
   boundingObject Box {
-    size 8 35 0.02
+    size 14 47 0.02
   }
 }
 Solid {
-  translation 0 8 0.015
+  translation -29.32 22.72 0.01
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.18 0.18 0.18
+        roughness 0.95
+        metalness 0
+      }
+      geometry Box {
+        size 14 47 0.02
+      }
+    }
+  ]
+  name "road_to_b(1)"
+  boundingObject Box {
+    size 14 47 0.02
+  }
+}
+Solid {
+  translation 0 8 -0.006
   rotation -1 0 0 -5.307179586466759e-06
   children [
     Shape {
@@ -480,7 +442,7 @@ Solid {
   name "roundabout"
   boundingObject Cylinder {
     height 0.02
-    radius 12
+    radius 16
   }
 }
 Solid {
@@ -549,157 +511,7 @@ DEF CAR BmwX5 {
   window "<none>"
 }
 Solid {
-  translation -14 -3.5 0.025
-  children [
-    Shape {
-      appearance PBRAppearance {
-        roughness 0.7
-        metalness 0
-      }
-      geometry Box {
-        size 0.5 1.2 0.005
-      }
-    }
-  ]
-  name "zw1"
-}
-Solid {
-  translation -14 -2 0.025
-  children [
-    Shape {
-      appearance PBRAppearance {
-        roughness 0.7
-        metalness 0
-      }
-      geometry Box {
-        size 0.5 1.2 0.005
-      }
-    }
-  ]
-  name "zw2"
-}
-Solid {
-  translation -14 -0.5 0.025
-  children [
-    Shape {
-      appearance PBRAppearance {
-        roughness 0.7
-        metalness 0
-      }
-      geometry Box {
-        size 0.5 1.2 0.005
-      }
-    }
-  ]
-  name "zw3"
-}
-Solid {
-  translation -14 1 0.025
-  children [
-    Shape {
-      appearance PBRAppearance {
-        roughness 0.7
-        metalness 0
-      }
-      geometry Box {
-        size 0.5 1.2 0.005
-      }
-    }
-  ]
-  name "zw4"
-}
-Solid {
-  translation -14 2.5 0.025
-  children [
-    Shape {
-      appearance PBRAppearance {
-        roughness 0.7
-        metalness 0
-      }
-      geometry Box {
-        size 0.5 1.2 0.005
-      }
-    }
-  ]
-  name "zw5"
-}
-Solid {
-  translation 14 -3.5 0.025
-  children [
-    Shape {
-      appearance PBRAppearance {
-        roughness 0.7
-        metalness 0
-      }
-      geometry Box {
-        size 0.5 1.2 0.005
-      }
-    }
-  ]
-  name "ze1"
-}
-Solid {
-  translation 14 -2 0.025
-  children [
-    Shape {
-      appearance PBRAppearance {
-        roughness 0.7
-        metalness 0
-      }
-      geometry Box {
-        size 0.5 1.2 0.005
-      }
-    }
-  ]
-  name "ze2"
-}
-Solid {
-  translation 14 -0.5 0.025
-  children [
-    Shape {
-      appearance PBRAppearance {
-        roughness 0.7
-        metalness 0
-      }
-      geometry Box {
-        size 0.5 1.2 0.005
-      }
-    }
-  ]
-  name "ze3"
-}
-Solid {
-  translation 14 1 0.025
-  children [
-    Shape {
-      appearance PBRAppearance {
-        roughness 0.7
-        metalness 0
-      }
-      geometry Box {
-        size 0.5 1.2 0.005
-      }
-    }
-  ]
-  name "ze4"
-}
-Solid {
-  translation 14 2.5 0.025
-  children [
-    Shape {
-      appearance PBRAppearance {
-        roughness 0.7
-        metalness 0
-      }
-      geometry Box {
-        size 0.5 1.2 0.005
-      }
-    }
-  ]
-  name "ze5"
-}
-Solid {
-  translation -45 28 0.003865
+  translation -48.23 28 0.003865
   children [
     Shape {
       appearance PBRAppearance {
@@ -1339,7 +1151,7 @@ Solid {
   }
 }
 Solid {
-  translation 50 28 0.008
+  translation 50.62 28 0.008
   children [
     Shape {
       appearance PBRAppearance {
@@ -2090,44 +1902,6 @@ Solid {
   name "cl2_7"
 }
 Solid {
-  translation -7 -39 0.06
-  children [
-    Shape {
-      appearance PBRAppearance {
-        baseColor 0.6 0.58 0.55
-        roughness 0.9
-        metalness 0
-      }
-      geometry Box {
-        size 0.4 22 0.1
-      }
-    }
-  ]
-  name "clt1"
-  boundingObject Box {
-    size 0.4 22 0.1
-  }
-}
-Solid {
-  translation -27 -39 0.06
-  children [
-    Shape {
-      appearance PBRAppearance {
-        baseColor 0.6 0.58 0.55
-        roughness 0.9
-        metalness 0
-      }
-      geometry Box {
-        size 0.4 22 0.1
-      }
-    }
-  ]
-  name "clt2"
-  boundingObject Box {
-    size 0.4 22 0.1
-  }
-}
-Solid {
   translation 18 -40 0.008
   children [
     Shape {
@@ -2149,6 +1923,25 @@ Solid {
         size 26 30 1
       }
     ]
+  }
+}
+Solid {
+  translation 26.86 -39 -0.03
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.6 0.58 0.55
+        roughness 0.9
+        metalness 0
+      }
+      geometry Box {
+        size 0.4 22 0.1
+      }
+    }
+  ]
+  name "crt1(3)"
+  boundingObject Box {
+    size 0.4 22 0.1
   }
 }
 Solid {
@@ -2362,7 +2155,7 @@ Solid {
   name "cr2_7"
 }
 Solid {
-  translation 7 -39 0.06
+  translation 6.92 -39 -0.03
   children [
     Shape {
       appearance PBRAppearance {
@@ -2381,7 +2174,7 @@ Solid {
   }
 }
 Solid {
-  translation 27 -39 0.06
+  translation -6.84 -39 -0.03
   children [
     Shape {
       appearance PBRAppearance {
@@ -2394,7 +2187,26 @@ Solid {
       }
     }
   ]
-  name "crt2"
+  name "crt1(1)"
+  boundingObject Box {
+    size 0.4 22 0.1
+  }
+}
+Solid {
+  translation -27.25 -39 -0.03
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.6 0.58 0.55
+        roughness 0.9
+        metalness 0
+      }
+      geometry Box {
+        size 0.4 22 0.1
+      }
+    }
+  ]
+  name "crt1(2)"
   boundingObject Box {
     size 0.4 22 0.1
   }
@@ -2494,13 +2306,6 @@ SimpleTree {
   rotation 0 0 1 1.5708
   name "t3"
   height 5
-}
-SimpleTree {
-  translation -25 44 0
-  rotation 0 0 1 1.5708
-  name "t4"
-  height 6
-  radius 2.5
 }
 SimpleTree {
   translation 30 44 0

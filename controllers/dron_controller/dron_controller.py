@@ -31,7 +31,11 @@ class Mavic(Robot):
     K_PITCH_P = 30.0
 
     MAX_YAW_DISTURBANCE = 0.4
-    MAX_PITCH_DISTURBANCE = -1.5
+    # Pitch mas negativo => mayor inclinacion hacia adelante => mas velocidad de crucero.
+    # -3.0 lo lleva a una velocidad horizontal claramente superior a la del coche.
+    MAX_PITCH_DISTURBANCE = -3.0
+    # Ganancia distancia->pitch (mas negativa => acelera antes a la velocidad max)
+    PITCH_DIST_GAIN = -0.35
 
     target_precision = 1.5
 
@@ -129,7 +133,8 @@ class Mavic(Robot):
 
         yaw_disturbance = clamp(angle_left, -self.MAX_YAW_DISTURBANCE, self.MAX_YAW_DISTURBANCE)
         if abs(angle_left) < 0.5:
-            pitch_disturbance = clamp(distance_left * -0.2, self.MAX_PITCH_DISTURBANCE, 0)
+            pitch_disturbance = clamp(distance_left * self.PITCH_DIST_GAIN,
+                                      self.MAX_PITCH_DISTURBANCE, 0)
         else:
             pitch_disturbance = 0
         return yaw_disturbance, pitch_disturbance

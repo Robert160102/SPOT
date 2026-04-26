@@ -9,3 +9,6 @@ Thumbs.db
 # Python cache
 __pycache__/
 *.pyc
+
+#windows metadata
+*:Zone.Identifier
