@@ -10,6 +10,7 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/dji/mavic/protos/Mavic2Pro.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/vehicles/protos/bmw/BmwX5.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/trees/protos/SimpleTree.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/advertising_board/protos/AdvertisingBoard.proto"
 
 WorldInfo {
   info [
@@ -24,8 +25,8 @@ WorldInfo {
   }
 }
 Viewpoint {
-  orientation 0.2432610206695297 0.6081993978609113 -0.7555908735979039 1.0307655353337213
-  position -45.97057021078713 -16.008548805393787 50.916353496183405
+  orientation 0.3014430242983143 -0.023922223583929852 -0.9531840485030613 3.3412124211031546
+  position 19.473384191480164 -61.48453826692917 14.168988498424026
   near 0.2
   follow "Mavic 2 PRO"
   followSmoothness 0.2
@@ -2652,4 +2653,16 @@ Transform {
       }
     }
   ]
+}
+AdvertisingBoard {
+  translation -6.11 -64.3 6.19961e-05
+  rotation 8.340347200291871e-09 -0.8697107080533842 0.49356183431995737 -5.307179586466759e-06
+  frontTexture [
+    "../../../UIPoste.jpeg"
+  ]
+  backTexture []
+  displayWidth 2
+  displayHeight 1.5
+  poleNumber 1
+  poleHeight 3
 }
