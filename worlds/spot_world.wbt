@@ -25,10 +25,11 @@ WorldInfo {
   }
 }
 Viewpoint {
-  orientation 0.3014430242983143 -0.023922223583929852 -0.9531840485030613 3.3412124211031546
-  position 19.473384191480164 -61.48453826692917 14.168988498424026
+  orientation 0.047913944265672706 -0.033776884254685634 -0.9982802091772387 4.725206373423999
+  position -2.706396885167436 -77.06285992664267 1.3186921066271107
   near 0.2
-  follow "Mavic 2 PRO"
+  follow "vehicle"
+  followType "Mounted Shot"
   followSmoothness 0.2
 }
 TexturedBackground {
@@ -497,7 +498,7 @@ SimpleTree {
   radius 2.2
 }
 DEF CAR BmwX5 {
-  translation -0.429836 -78.0211 0.299547
+  translation -2.40984 -78.0211 0.299547
   rotation 0.005506751479347194 -0.005506730621638819 0.9999696753432102 1.5708303251028644
   controller "coche_seguidor"
   sensorsSlotTop [
@@ -2658,7 +2659,7 @@ AdvertisingBoard {
   translation -6.11 -64.3 6.19961e-05
   rotation 8.340347200291871e-09 -0.8697107080533842 0.49356183431995737 -5.307179586466759e-06
   frontTexture [
-    "../../../UIPoste.jpeg"
+    "../../../Downloads/WhatsApp Image 2026-04-26 at 10.58.51.jpeg"
   ]
   backTexture []
   displayWidth 2
