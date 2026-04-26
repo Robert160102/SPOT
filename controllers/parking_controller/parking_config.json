@@ -7,6 +7,11 @@
       "reference_image": "cam_parking_A.png",
       "spot_width": 107,
       "spot_height": 48,
+      "world_position": [-53.11, 26.99, 25],
+      "rotation": [0, 1, 0, 1.5707996938995747],
+      "fov": 1.2,
+      "image_width": 640,
+      "image_height": 480,
       "spots": [
         {
           "x": 26,
@@ -209,6 +214,11 @@
       "reference_image": "cam_parking_B.png",
       "spot_width": 48,
       "spot_height": 107,
+      "world_position": [44.15, 23.98, 25],
+      "rotation": [0.5773489358556708, -0.5773509358554485, -0.5773509358554485, -2.094395307179586],
+      "fov": 1.2,
+      "image_width": 640,
+      "image_height": 480,
       "spots": [
         {
           "x": 95,
@@ -363,6 +373,11 @@
       "reference_image": "cam_parking_CL.png",
       "spot_width": 128,
       "spot_height": 63,
+      "world_position": [-15.94, -38.99, 20],
+      "rotation": [0.5773489358556708, -0.5773509358554485, -0.5773509358554485, -2.094395307179586],
+      "fov": 1.2,
+      "image_width": 640,
+      "image_height": 480,
       "spots": [
         {
           "x": 68,
@@ -445,6 +460,11 @@
       "reference_image": "cam_parking_CR.png",
       "spot_width": 128,
       "spot_height": 63,
+      "world_position": [16.08, -38.76, 20],
+      "rotation": [0.5773489358556708, -0.5773509358554485, -0.5773509358554485, -2.094395307179586],
+      "fov": 1.2,
+      "image_width": 640,
+      "image_height": 480,
       "spots": [
         {
           "x": 115,

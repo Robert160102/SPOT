@@ -9,6 +9,7 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/trees/protos/Pine.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/dji/mavic/protos/Mavic2Pro.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/vehicles/protos/bmw/BmwX5.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/trees/protos/SimpleTree.proto"
 
 WorldInfo {
   info [
@@ -23,8 +24,8 @@ WorldInfo {
   }
 }
 Viewpoint {
-  orientation -0.08207987293766045 0.9745840908740364 0.2084436237301717 0.4242512279221792
-  position -18.671668019682688 -70.65587700596188 8.747660848070419
+  orientation -0.1085299680364917 0.8931883000129612 0.4363896272346011 0.3033298603799104
+  position -43.839079923289276 -72.18986917525112 20.964331190089062
   near 0.2
   follow "Mavic 2 PRO"
   followSmoothness 0.2
@@ -50,7 +51,7 @@ Windmill {
   name "windmill(1)"
 }
 SquareManhole {
-  translation -2.08 -71.78 0
+  translation -5.96 -71.78 0
 }
 Pine {
   translation -14.0083 -14.4828 0
@@ -69,14 +70,18 @@ Pine {
   translation -26.6328 -7.1707 0
   name "pine tree(6)"
 }
-Mavic2Pro {
-  translation -2.37013 -71.69 0.24
-  rotation 0 0 -1 -1.5707953071795862
+DEF DRONE Mavic2Pro {
+  translation -5.89013 -71.78 0.24
+  rotation 0 0 1 -5.307179586466759e-06
+  controller "dron_controller"
   cameraSlot [
     Camera {
       width 400
       height 240
       near 0.2
+    }
+    Receiver {
+      channel 2
     }
   ]
 }
@@ -528,8 +533,8 @@ SimpleTree {
   height 5
   radius 2.2
 }
-BmwX5 {
-  translation -2.0498499900075853 -77.50105677633042 0.3052456488124744
+DEF CAR BmwX5 {
+  translation -0.429836 -78.0211 0.299547
   rotation 0.005506751479347194 -0.005506730621638819 0.9999696753432102 1.5708303251028644
   controller "coche_seguidor"
   sensorsSlotTop [
@@ -2517,13 +2522,13 @@ SimpleTree {
   height 5
 }
 SimpleTree {
-  translation 8 -55 0
+  translation 8 -57 0
   rotation 0 0 1 1.5708
   name "t11"
   height 5
 }
 SimpleTree {
-  translation -8 -55 0
+  translation -8 -57 0
   rotation 0 0 1 1.5708
   name "t12"
   height 6
@@ -2744,6 +2749,14 @@ Robot {
           far 50
         }
       ]
+    }
+    Emitter {
+      name "emitter_car"
+      channel 1
+    }
+    Emitter {
+      name "emitter_drone"
+      channel 2
     }
   ]
   name "parking_supervisor"

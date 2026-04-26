@@ -1,25 +1,37 @@
-"""coche_seguidor controller."""
-
 from vehicle import Driver
 import math
 import time
 
-# ==========================================
-# 1. CONFIGURACIÓN INICIAL
-# ==========================================
 driver = Driver()
 TIME_STEP = int(driver.getBasicTimeStep())
 
-# Variables de control
-DISTANCIA_SEGURIDAD = 3.0
-VELOCIDAD_CRUCERO = 15.0 / 3.6  # Convertir 15 km/h a m/s (4.17 m/s)
-KP_GIRO = 0.3
-MAX_STEERING_ANGLE = math.radians(30)  # Máximo 30 grados
-TIMEOUT_SEÑAL = 2.0  # Segundos sin mensaje = señal perdida
+dev = True
 
-# ==========================================
-# 2. INICIALIZAR SENSORES
-# ==========================================
+# =========================
+# PARAMETROS
+# =========================
+
+DISTANCIA_FRENADO = 1.5
+DISTANCIA_PARADA = 0.5
+
+VELOCIDAD_CRUCERO = 6.0  # m/s
+
+KP_STEER = 1.2
+MAX_STEERING_ANGLE = math.radians(30)
+
+TIMEOUT_SENAL = 2.0
+DEBUG_LOG_INTERVAL = 0.5
+
+# >>> REVERSA: manejar giros muy cerrados <<<
+REVERSE_DURATION = 2.0              # segundos en marcha atrás
+REVERSE_SPEED = -2.0                # m/s negativa = hacia atrás
+REVERSE_ERROR_THRESHOLD = math.radians(150)   # 150° de error para activar
+REVERSE_DISTANCE_THRESHOLD = 10.0   # solo si está a menos de 10 m del target
+
+# =========================
+# DISPOSITIVOS
+# =========================
+
 gps = driver.getDevice("gps")
 gps.enable(TIME_STEP)
 
@@ -28,85 +40,177 @@ compass.enable(TIME_STEP)
 
 receiver = driver.getDevice("receiver")
 receiver.enable(TIME_STEP)
+receiver.setChannel(1)
 
-print("Sistema de conducción autónoma activado.")
-print(f"Escuchando al dron. Distancia objetivo: {DISTANCIA_SEGURIDAD}m")
-print(f"Velocidad: {VELOCIDAD_CRUCERO:.2f} m/s ({VELOCIDAD_CRUCERO * 3.6:.1f} km/h)")
+print("coche_seguidor activo. Esperando objetivo del supervisor.")
 
-# Variables
+# =========================
+# ESTADO
+# =========================
+
 target_x = None
-target_z = None
-ultimo_mensaje = time.time()
-error_giro_anterior = 0.0
+target_y = None
 
-# ==========================================
-# 3. BUCLE PRINCIPAL
-# ==========================================
+ultimo_mensaje = time.time()
+last_debug_log = 0.0
+
+previous_target_x = None
+previous_target_y = None
+
+# >>> REVERSA: temporizador <<<
+reverse_until = 0.0
+
+# =========================
+# UTILS
+# =========================
+
+def normalize_angle(angle):
+    while angle > math.pi:
+        angle -= 2 * math.pi
+    while angle < -math.pi:
+        angle += 2 * math.pi
+    return angle
+
+
+def heading_from_compass(compass_values):
+    return math.atan2(compass_values[1], compass_values[0])
+
+
+# =========================
+# LOOP PRINCIPAL
+# =========================
+
 while driver.step() != -1:
-    
-    # A. LEER MENSAJES DEL DRON
-    if receiver.getQueueLength() > 0:
+
+    # =========================
+    # A. RECEPCION OBJETIVO
+    # =========================
+    while receiver.getQueueLength() > 0:
         mensaje = receiver.getString()
-        
-        try:
-            coordenadas = mensaje.split(',')
-            target_x = float(coordenadas[0])
-            target_z = float(coordenadas[1])
-            ultimo_mensaje = time.time()
-        except Exception as e:
-            print("Error leyendo mensaje del dron. Formato: 'X,Z'")
-            
         receiver.nextPacket()
-    
-    # B. LÓGICA DE PERSECUCIÓN
-    if target_x is not None and target_z is not None:
-        
-        # Verificar si la señal se perdió
-        if (time.time() - ultimo_mensaje) > TIMEOUT_SEÑAL:
-            print("Señal del dron perdida (timeout). Deteniendo.")
-            driver.setCruisingSpeed(0.0)
-            target_x = None
-            target_z = None
-        else:
-            # 1. Leer posición actual
-            posicion_actual = gps.getValues()
-            mi_x = posicion_actual[0]
-            mi_z = posicion_actual[2]
-            
-            # 2. Calcular distancia
-            distancia = math.sqrt((target_x - mi_x)**2 + (target_z - mi_z)**2)
-            
-            # 3. Leer brújula
-            brujula = compass.getValues()
-            mi_angulo = math.atan2(brujula[0], brujula[2])
-            
-            # 4. Calcular ángulo objetivo
-            angulo_objetivo = math.atan2(target_x - mi_x, target_z - mi_z)
-            
-            # 5. Calcular error de giro
-            error_giro = angulo_objetivo - mi_angulo
-            
-            # Normalizar ángulo
-            if error_giro > math.pi:
-                error_giro -= 2.0 * math.pi
-            elif error_giro < -math.pi:
-                error_giro += 2.0 * math.pi
-            
-            # Suavizar error (filtro simple)
-            error_giro = (error_giro * 0.7) + (error_giro_anterior * 0.3)
-            error_giro_anterior = error_giro
-            
-            # 6. Calcular ángulo del volante con límites
-            angulo_volante = error_giro * KP_GIRO
-            angulo_volante = max(-MAX_STEERING_ANGLE, min(MAX_STEERING_ANGLE, angulo_volante))
-            driver.setSteeringAngle(angulo_volante)
-            
-            # 7. Controlar velocidad según distancia
-            if distancia > DISTANCIA_SEGURIDAD:
-                driver.setCruisingSpeed(VELOCIDAD_CRUCERO)
-            else:
-                driver.setCruisingSpeed(0.0)
-    
-    else:
-        # Sin señal: quieto
+        try:
+            partes = mensaje.split(',')
+            new_target_x = float(partes[0])
+            new_target_y = float(partes[1])
+            if new_target_x != previous_target_x or new_target_y != previous_target_y:
+                target_x = new_target_x
+                target_y = new_target_y
+                previous_target_x = target_x
+                previous_target_y = target_y
+                if dev:
+                    print(f"[coche] NUEVO OBJETIVO RECIBIDO: ({target_x:.2f}, {target_y:.2f})")
+            ultimo_mensaje = time.time()
+        except Exception:
+            print(f"Mensaje invalido: {mensaje}")
+
+    # =========================
+    # B. SEGURIDAD
+    # =========================
+    if target_x is None or target_y is None:
         driver.setCruisingSpeed(0.0)
+        driver.setBrakeIntensity(1.0)
+        continue
+
+    if (time.time() - ultimo_mensaje) > TIMEOUT_SENAL:
+        driver.setCruisingSpeed(0.0)
+        driver.setBrakeIntensity(1.0)
+        target_x = target_y = None
+        continue
+
+    # =========================
+    # C. ESTADO ACTUAL
+    # =========================
+    pos = gps.getValues()
+    mi_x, mi_y = pos[0], pos[1]
+
+    dx = target_x - mi_x
+    dy = target_y - mi_y
+    distancia = math.hypot(dx, dy)
+
+    brujula = compass.getValues()
+    mi_angulo = normalize_angle(heading_from_compass(brujula))
+    angulo_objetivo = math.atan2(dx, dy)
+    error = normalize_angle(angulo_objetivo - mi_angulo)
+
+    # >>> REVERSA: activar si el error es muy grande y estamos cerca <<<
+    if (time.time() > reverse_until and
+        abs(error) > REVERSE_ERROR_THRESHOLD and
+        distancia < REVERSE_DISTANCE_THRESHOLD):
+        reverse_until = time.time() + REVERSE_DURATION
+        if dev:
+            print("[coche] INICIANDO MANIOBRA DE MARCHA ATRÁS")
+
+    # Si estamos dentro del tiempo de reversa, la aplicamos
+    if time.time() < reverse_until:
+        driver.setBrakeIntensity(0.0)
+        driver.setCruisingSpeed(REVERSE_SPEED)  # negativa → marcha atrás
+        # El volante gira al máximo hacia el lado contrario del error
+        steer_reverse = -math.copysign(MAX_STEERING_ANGLE, error)
+        driver.setSteeringAngle(steer_reverse)
+        if dev and (time.time() - last_debug_log) >= DEBUG_LOG_INTERVAL:
+            last_debug_log = time.time()
+            print(
+                f"[coche] REVERSA pos=({mi_x:.2f},{mi_y:.2f}) "
+                f"error={error:.2f} steer={steer_reverse:.2f} speed={REVERSE_SPEED:.2f}"
+            )
+        continue   # saltamos el control normal
+
+    # =========================
+    # D. STEERING (normal)
+    # =========================
+    steer_cmd = KP_STEER * math.tanh(error)
+    angulo_volante = max(-MAX_STEERING_ANGLE, min(MAX_STEERING_ANGLE, steer_cmd))
+    driver.setSteeringAngle(angulo_volante)
+
+    # =========================
+    # E. VELOCIDAD
+    # =========================
+
+    # Velocidad base según alineación (0 = perpendicular, 1 = perfecto)
+    alignment = max(0.0, 1.0 - abs(error) / math.pi)
+    speed_cmd = VELOCIDAD_CRUCERO * alignment
+
+    # Si el error es muy grande (>150°) y estamos cerca (<5 m), avance muy lento para no pasarnos
+    if abs(error) > math.radians(150) and distancia < 5.0:
+        speed_cmd = 1.0 / 3.6   # avance mínimo para poder girar
+    # Si no, asegurar una velocidad mínima razonable para giros amplios (0.5 m/s)
+    else:
+        speed_cmd = max(speed_cmd, 1.5)   # al menos 1.5 m/s para poder girar bien
+
+    # Evitar bloqueo total (ya cubierto por el mínimo anterior)
+    # speed_cmd = max(speed_cmd, 0.5 / 3.6)  # sobra, lo quitamos
+
+    # =========================
+    # F. FRENADO (normal)
+    # =========================
+    if distancia < DISTANCIA_PARADA:
+        driver.setCruisingSpeed(0.0)
+        driver.setBrakeIntensity(1.0)
+        speed_cmd = 0.0
+        brake_cmd = 1.0
+    elif distancia < DISTANCIA_FRENADO:
+        driver.setCruisingSpeed(0.0)
+        driver.setBrakeIntensity(0.4)
+        speed_cmd = 0.0
+        brake_cmd = 0.4
+    else:
+        driver.setBrakeIntensity(0.0)
+        driver.setCruisingSpeed(speed_cmd)
+        brake_cmd = 0.0
+
+    # =========================
+    # G. DEBUG
+    # =========================
+    if dev and (time.time() - last_debug_log) >= DEBUG_LOG_INTERVAL:
+        last_debug_log = time.time()
+        print(
+            f"[coche] pos=({mi_x:.2f}, {mi_y:.2f}) "
+            f"target=({target_x:.2f}, {target_y:.2f}) "
+            f"dist={distancia:.2f} "
+            f"heading={mi_angulo:.2f} "
+            f"target_ang={angulo_objetivo:.2f} "
+            f"error={error:.2f} "
+            f"steer={angulo_volante:.2f} "
+            f"speed={speed_cmd:.2f} "
+            f"brake={brake_cmd:.2f}"
+        )
