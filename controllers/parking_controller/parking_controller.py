@@ -472,20 +472,17 @@ def assign_spot(zone_letter, required_type):
 
 
 def update_digital_twin_from_results(results):
-    """Refresca el estado de cada plaza con lo que ve la camara.
-
-    Reglas:
-    - "reserved" SIEMPRE se respeta (lo gestiona el supervisor durante la mision;
-      la camara podria ver el coche pasando por encima y no debe pisarlo).
-    - "occupied" puede volver a "free" cuando la camara deja de ver vehiculo,
-      o seguir como "occupied" si lo sigue viendo. Esto evita que una plaza
-      quede congelada como ocupada solo porque el coche del usuario paso por
-      encima en su trayecto.
-    - La plaza realmente aparcada permanece "occupied" mientras el coche siga
-      fisicamente alli (la camara lo seguira viendo).
-    """
     for r in results:
         if digital_twin[r.global_id]["status"] == "reserved":
+            # Solo pisar "reserved" si la camara ve un vehiculo Y nuestro coche esta lejos
+            # (evita falso positivo cuando el propio coche entra a la plaza)
+            if r.status == "occupied" and current_spot_id == r.global_id:
+                cx, cy = car_xy()
+                d = math.hypot(cx - digital_twin[r.global_id]["world_x"],
+                               cy - digital_twin[r.global_id]["world_y"])
+                if d > CAR_PARK_RADIUS * 2:
+                    digital_twin[r.global_id]["status"] = "occupied"
+                    print(f"[digital_twin] Plaza {r.global_id} reservada marcada occupied por camara (intruso detectado)")
             continue
         digital_twin[r.global_id]["status"] = r.status
 
@@ -532,6 +529,136 @@ def start_mission(spot_id):
 
     current_spot_id = spot_id
     mission_state = "approaching"
+
+
+def redirect_to_spot(new_spot_id):
+    """Redirige la mision en curso hacia una nueva plaza SIN reiniciar la ruta.
+
+    Solo sustituye los dos ultimos waypoints del dron (crucero sobre plaza +
+    hover) y el tramo final del car_waypoints a partir del nodo de entrada de
+    zona. Todo lo anterior (nodos de grafo ya recorridos o en camino) se conserva,
+    de modo que el dron y el coche no se "teletransportan" ni pierden su contexto.
+
+    Asume que la nueva plaza esta en la misma zona (mismo zone_entry_node),
+    que es el caso habitual al reasignar por intruso.
+    """
+    global current_spot_id, spot_world_xy
+    global drone_waypoints, car_waypoints
+    global car_last_xy, car_still_since
+
+    info = digital_twin[new_spot_id]
+    new_spot_xy = (info["world_x"], info["world_y"])
+
+    # =========================
+    # POSICION ACTUAL DEL DRON
+    # =========================
+    dx, dy, dz = drone_xyz()
+
+    # Buscar waypoint actual mas cercano
+    closest_idx = min(
+        range(len(drone_waypoints)),
+        key=lambda i: math.hypot(
+            drone_waypoints[i][0] - dx,
+            drone_waypoints[i][1] - dy
+        )
+    )
+
+    # Mantener SOLO la parte futura de la ruta
+    remaining_route = drone_waypoints[closest_idx:]
+
+    # Evitar pequeños retrocesos
+    if len(remaining_route) > 0:
+        d0 = math.hypot(
+            remaining_route[0][0] - dx,
+            remaining_route[0][1] - dy
+        )
+        if d0 < 2.0:
+            remaining_route = remaining_route[1:]
+
+    # Eliminar el destino viejo
+    if len(remaining_route) >= 2:
+        remaining_route = remaining_route[:-2]
+
+    # Nueva ruta desde posicion REAL actual
+    drone_waypoints = (
+        [[dx, dy, dz]]
+        + remaining_route
+        + [
+            [new_spot_xy[0], new_spot_xy[1], CRUISE_ALT],
+            [new_spot_xy[0], new_spot_xy[1], HOVER_ALT],
+        ]
+    )
+
+    # =========================
+    # COCHE
+    # =========================
+    zone_entry_node = ZONE_TO_ENTRY[info["camera"]]
+    entry_xy = ROAD_NODES[zone_entry_node]
+
+    entry_idx = min(
+        range(len(car_waypoints)),
+        key=lambda i: math.hypot(
+            car_waypoints[i][0] - entry_xy[0],
+            car_waypoints[i][1] - entry_xy[1]
+        )
+    )
+
+    new_tail = densify_xy_path(
+        [car_waypoints[entry_idx], new_spot_xy],
+        max_spacing=CAR_WP_SPACING
+    )
+
+    car_waypoints = list(car_waypoints[:entry_idx]) + new_tail
+
+    # =========================
+    # ESTADO
+    # =========================
+    spot_world_xy = new_spot_xy
+    current_spot_id = new_spot_id
+    car_last_xy = None
+    car_still_since = None
+
+    send_drone_waypoints(drone_waypoints)
+
+    if dev:
+        show_reserved_marker(spot_world_xy)
+
+    print(
+        f"[redirect] Redirigido a plaza {new_spot_id} "
+        f"desde posicion actual del dron."
+    )
+
+def reassign_spot():
+    """Busca otra plaza con los mismos criterios y redirige la mision hacia ella.
+    Devuelve True si se encontro alternativa, False si no hay ninguna libre."""
+    global current_spot_id
+
+    info = digital_twin[current_spot_id]
+    cam_name = info["camera"]
+    required_type = info.get("type")
+
+    zone_letter = None
+    for letter, cams in ZONE_TO_CAMERAS.items():
+        if cam_name in cams:
+            zone_letter = letter
+            break
+
+    # Marcar la plaza ocupada por el intruso
+    digital_twin[current_spot_id]["status"] = "occupied"
+    current_spot_id = None
+
+    if zone_letter is None:
+        print("[reassign] No se pudo determinar la zona.")
+        return False
+
+    new_id, err = assign_spot(zone_letter, required_type)
+    if new_id is None:
+        print(f"[reassign] Sin alternativa en zona {zone_letter} tipo {required_type}: {err}")
+        return False
+
+    print(f"[reassign] Nueva plaza: {new_id}")
+    redirect_to_spot(new_id)
+    return True
 
 
 def _project_xy_onto_path(xy, path, start_idx=0):
@@ -626,6 +753,23 @@ def update_mission():
     if mission_state == "idle":
         return
     dx, dy, dz = drone_xyz()
+
+    # ── Deteccion de intruso ──────────────────────────────────────────────────
+    # Si la plaza reservada aparece como "occupied" y nuestro coche aun esta
+    # lejos (no somos nosotros los que la estamos ocupando), es un intruso.
+    if mission_state in ("approaching", "parking") and current_spot_id is not None:
+        cx, cy = car_xy()
+        d_car_to_spot = math.hypot(cx - spot_world_xy[0], cy - spot_world_xy[1])
+        if d_car_to_spot > CAR_PARK_RADIUS * 2:
+            if digital_twin[current_spot_id]["status"] == "occupied":
+                print(f"[intruso] Plaza {current_spot_id} ocupada. Reasignando...")
+                if not reassign_spot():
+                    print("[intruso] Sin alternativas. Dron retorna a casa.")
+                    mission_state = "returning"
+                    send_drone_waypoints(build_return_plan((dx, dy), HOME_XY))
+                return
+    # ─────────────────────────────────────────────────────────────────────────
+
     if mission_state == "approaching":
         target = (spot_world_xy[0], spot_world_xy[1], HOVER_ALT)
         d_xy = math.hypot(dx - target[0], dy - target[1])
