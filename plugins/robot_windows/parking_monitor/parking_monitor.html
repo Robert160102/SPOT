@@ -84,10 +84,53 @@
         color: #7f8c8d;
         font-size: 12px;
       }
+      .metrics-panel {
+        background: #1e242c;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border: 1px solid #3a4a5a;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+      }
+      .metric-item {
+        text-align: center;
+      }
+      .metric-label {
+        font-size: 12px;
+        color: #b0c4de;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+      }
+      .metric-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #fff;
+        font-family: "Courier New", Courier, monospace;
+      }
+      .metric-value.active {
+        color: #4caf50;
+      }
     </style>
   </head>
   <body>
     <h1>PARKING MONITOR - 4 CAMERAS</h1>
+
+    <div class="metrics-panel">
+      <div class="metric-item">
+        <div class="metric-label">Drone Travel Time</div>
+        <div id="metric-drone-time" class="metric-value">--:--</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-label">Car Travel Time</div>
+        <div id="metric-car-time" class="metric-value">--:--</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-label">Mission Duration</div>
+        <div id="metric-mission-duration" class="metric-value">--:--</div>
+      </div>
+    </div>
 
     <div class="mosaic">
       <!-- Cámara A -->
@@ -389,12 +432,60 @@
           cams.forEach((cam) => drawOverlay(cam));
         }
 
+        function formatTime(seconds) {
+          if (seconds <= 0) return "--:--";
+          const mins = Math.floor(seconds / 60);
+          const secs = Math.floor(seconds % 60);
+          return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+        }
+
         // Función que será llamada desde el padre (dashboard)
         window.handleWebotsMessage = function (message) {
           try {
             const data = JSON.parse(message);
             const timestamp = new Date().toLocaleTimeString();
             debugDiv.textContent = `Último mensaje: ${timestamp}`;
+
+            if (data.metrics) {
+              const m = data.metrics;
+              const droneEl = document.getElementById("metric-drone-time");
+              const carEl = document.getElementById("metric-car-time");
+              const durationEl = document.getElementById("metric-mission-duration");
+
+              if (data.mission_state !== "idle") {
+                const duration = m.current_time - m.mission_start_time;
+                durationEl.textContent = formatTime(duration);
+                durationEl.classList.add("active");
+
+                if (m.drone_time > 0) {
+                  droneEl.textContent = formatTime(m.drone_time);
+                  droneEl.classList.remove("active");
+                } else {
+                  droneEl.textContent = formatTime(duration);
+                  droneEl.classList.add("active");
+                }
+
+                if (m.car_time > 0) {
+                  carEl.textContent = formatTime(m.car_time);
+                  carEl.classList.remove("active");
+                } else {
+                  carEl.textContent = formatTime(duration);
+                  carEl.classList.add("active");
+                }
+              } else {
+                durationEl.classList.remove("active");
+                droneEl.classList.remove("active");
+                carEl.classList.remove("active");
+                
+                // Si acabamos de terminar, mantenemos los valores finales un momento
+                // o los reseteamos si es una nueva carga
+                if (m.mission_start_time === 0) {
+                  durationEl.textContent = "--:--";
+                  droneEl.textContent = "--:--";
+                  carEl.textContent = "--:--";
+                }
+              }
+            }
 
             if (data.digital_twin) {
               // Almacenar digital_twin globalmente

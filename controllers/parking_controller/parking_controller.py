@@ -417,6 +417,11 @@ drone_path_idx = 0          # proyeccion (no decreciente) de la xy del dron sobr
 car_last_xy = None
 car_still_since = None
 
+# Métricas de tiempo
+mission_start_time = 0.0
+drone_time = 0.0
+car_time = 0.0
+
 
 ZONE_TO_CAMERAS = {
     'A': ['cam_parking_A'],
@@ -491,6 +496,11 @@ def start_mission(spot_id):
     global mission_state, current_spot_id, spot_world_xy
     global drone_waypoints, car_waypoints, drone_wp_index, current_car_target, access_south_idx
     global drone_path_idx, car_last_xy, car_still_since
+    global mission_start_time, drone_time, car_time
+
+    mission_start_time = robot.getTime()
+    drone_time = 0.0
+    car_time = 0.0
 
     info = digital_twin[spot_id]
     spot_world_xy = (info["world_x"], info["world_y"])
@@ -750,6 +760,8 @@ def update_mission():
     global mission_state, current_spot_id, current_car_target, access_south_idx
     global drone_wp_index, drone_path_idx
     global car_last_xy, car_still_since
+    global drone_time, car_time
+
     if mission_state == "idle":
         return
     dx, dy, dz = drone_xyz()
@@ -775,7 +787,8 @@ def update_mission():
         d_xy = math.hypot(dx - target[0], dy - target[1])
         d_z = abs(dz - target[2])
         if d_xy < SPOT_ARRIVAL_RADIUS and d_z < 1.0:
-            print("Dron sobre plaza. Iniciando retorno y esperando al coche.")
+            drone_time = robot.getTime() - mission_start_time
+            print(f"Dron sobre plaza en {drone_time:.2f}s. Iniciando retorno y esperando al coche.")
             mission_state = "parking"
             # Reiniciar tracking de "coche quieto"
             car_last_xy = None
@@ -809,8 +822,9 @@ def update_mission():
             car_still_since = None
 
         if parked_by_radius or parked_by_still:
+            car_time = robot.getTime() - mission_start_time
             reason = "radio" if parked_by_radius else "estacionario"
-            print(f"Coche aparcado en plaza {current_spot_id} (criterio: {reason}, d={d_car:.2f} m).")
+            print(f"Coche aparcado en plaza {current_spot_id} (criterio: {reason}, d={d_car:.2f} m) en {car_time:.2f}s.")
             digital_twin[current_spot_id]["status"] = "occupied"
             mission_state = "returning"
     elif mission_state == "returning":
@@ -877,6 +891,12 @@ while robot.step(timestep) != -1:
         if accumulated_results:
             accumulated_results["digital_twin"] = digital_twin
             accumulated_results["mission_state"] = mission_state
+            accumulated_results["metrics"] = {
+                "mission_start_time": mission_start_time,
+                "drone_time": drone_time,
+                "car_time": car_time,
+                "current_time": current_time
+            }
             robot.wwiSendText(json.dumps(accumulated_results))
             accumulated_results = {}
         last_send_time = current_time

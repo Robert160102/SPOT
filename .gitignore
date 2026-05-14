@@ -12,3 +12,6 @@ __pycache__/
 
 #windows metadata
 *:Zone.Identifier
+
+# venv
+/.venv
