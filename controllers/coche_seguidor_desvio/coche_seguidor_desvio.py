@@ -31,6 +31,9 @@ REVERSE_SPEED = -2.0                # m/s negativa = hacia atrás
 REVERSE_ERROR_THRESHOLD = math.radians(150)   # 150° de error para activar
 REVERSE_DISTANCE_THRESHOLD = 10.0   # solo si está a menos de 10 m del target
 
+# --- NUEVOS PARÁMETROS DE SIMULACIÓN DE AVERÍA ---
+TIEMPO_MAXIMO_SEGUIMIENTO = 40.0
+
 # =========================
 # DISPOSITIVOS
 # =========================
@@ -62,6 +65,10 @@ previous_target_y = None
 
 # >>> REVERSA: temporizador <<<
 reverse_until = 0.0
+
+# --- NUEVAS VARIABLES DE ESTADO PARA LA AVERÍA ---
+tiempo_inicio_seguimiento = None
+coche_averiado = False
 
 # =========================
 # UTILS
@@ -100,11 +107,36 @@ while driver.step() != -1:
                 target_y = new_target_y
                 previous_target_x = target_x
                 previous_target_y = target_y
+                
+                # Arrancamos el cronómetro de la avería con el primer mensaje válido recibido
+                if tiempo_inicio_seguimiento is None:
+                    tiempo_inicio_seguimiento = driver.getTime()
+                
                 if dev:
                     print(f"[coche] NUEVO OBJETIVO RECIBIDO: ({target_x:.2f}, {target_y:.2f})")
             ultimo_mensaje = time.time()
         except Exception:
             print(f"Mensaje invalido: {mensaje}")
+    
+    # SIMULACIÓN DE AVERÍA (NUEVO)
+    # =========================
+    # Si ya hemos empezado a seguir al dron, comprobamos cuánto tiempo ha pasado
+    if tiempo_inicio_seguimiento is not None and not coche_averiado:
+        tiempo_conduciendo = driver.getTime() - tiempo_inicio_seguimiento
+        
+        # Si superamos los 20 segundos, activamos la avería
+        if tiempo_conduciendo > TIEMPO_MAXIMO_SEGUIMIENTO:
+            coche_averiado = True
+            print("\n" + "="*50)
+            print(f"🛑 SIMULACIÓN DE AVERÍA ACTIVADA a los {TIEMPO_MAXIMO_SEGUIMIENTO}s")
+            print("El coche se detiene por completo. Esperando que el dron se aleje...")
+            print("="*50 + "\n")
+
+    # Si el coche está averiado, clavamos frenos y nos saltamos TODO el control
+    if coche_averiado:
+        driver.setCruisingSpeed(0.0)
+        driver.setBrakeIntensity(1.0)
+        continue
 
     # =========================
     # B. SEGURIDAD

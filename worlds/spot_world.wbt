@@ -86,6 +86,7 @@ DEF DRONE Mavic2Pro {
   translation -5.896413724837889 -71.7800013512537 0.1157087601853774
   rotation 3.509638501880828e-05 -0.99999985012162 0.0005463743970075132 0.06974291007785986
   controller "dron_controller"
+  supervisor TRUE
   cameraSlot [
     Camera {
       width 400
@@ -603,7 +604,7 @@ SimpleTree {
 DEF CAR BmwX5 {
   translation -0.38984 -78.0197 0.321191
   rotation 0.006604830111039591 -0.00660480487384278 0.9999563754343399 1.5708436043016953
-  controller "coche_seguidor"
+  controller "coche_seguidor_desvio"
   sensorsSlotTop [
     Receiver {
       channel 1

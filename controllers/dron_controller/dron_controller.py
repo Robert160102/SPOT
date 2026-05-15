@@ -4,7 +4,7 @@ Recibe lista de waypoints del parking_supervisor por Receiver canal 2.
 Sin waypoints: hover en posicion actual.
 """
 
-from controller import Robot
+from controller import Supervisor
 import json
 import sys
 
@@ -23,7 +23,7 @@ def clamp(value, value_min, value_max):
     return min(max(value, value_min), value_max)
 
 
-class Mavic(Robot):
+class Mavic(Supervisor):
     K_VERTICAL_THRUST = 68.5
     K_VERTICAL_OFFSET = 0.6
     K_VERTICAL_P = 3.0
@@ -40,7 +40,7 @@ class Mavic(Robot):
     target_precision = 1.5
 
     def __init__(self):
-        Robot.__init__(self)
+        Supervisor.__init__(self)
         self.time_step = int(self.getBasicTimeStep())
 
         self.camera = self.getDevice("camera")
@@ -75,6 +75,10 @@ class Mavic(Robot):
         self.target_index = 0
         self.target_position = [0, 0, 0]
         self.target_altitude = 0.5    # arranca a baja altura
+        
+        # NUEVO: Obtener referencia al coche (Asumiendo que el DEF en Webots es 'CAR')
+        self.coche_nodo = self.getFromDef("CAR")
+        self.home_position = None  # Guardaremos la base aquí
 
     def set_position(self, pos):
         self.current_pose = pos
@@ -151,10 +155,23 @@ class Mavic(Robot):
         pitch_disturbance = 0.0
         mission_armed = False  # True una vez recibido primer waypoint
         last_log = 0.0
+        
+        # --- AÑADE ESTA LÍNEA ---
+        mision_abortada = False
 
         t1 = self.getTime()
-        while self.step(self.time_step) != -1:
+        while self.step(self.time_step) != -1:                      
             had_no_wps = not self.waypoints
+            
+            # --- MODIFICADO: Ignorar radio si abortamos ---
+            if mision_abortada:
+                # Vaciar buzón sin hacer caso
+                while self.receiver is not None and self.receiver.getQueueLength() > 0:
+                    self.receiver.nextPacket()
+            else:
+                self.consume_messages()
+            # ----------------------------------------------
+            
             self.consume_messages()
             if had_no_wps and self.waypoints:
                 mission_armed = True
@@ -164,6 +181,36 @@ class Mavic(Robot):
             x_pos, y_pos, altitude = self.gps.getValues()
             roll_acceleration, pitch_acceleration, _ = self.gyro.getValues()
             self.set_position([x_pos, y_pos, altitude, roll, pitch, yaw])
+            
+            # --- INICIO SEGURIDAD: CONTROL DE DISTANCIA ---
+            if self.home_position is None and not np.isnan(x_pos):
+                self.home_position = [x_pos, y_pos, HOME_ALT_MIN]
+
+            if self.waypoints and self.coche_nodo and mission_armed and not mision_abortada:
+                pos_coche = self.coche_nodo.getPosition()
+                dist_coche = np.sqrt((pos_coche[0] - x_pos)**2 + (pos_coche[1] - y_pos)**2)
+
+                DISTANCIA_MAXIMA = 25.0  
+
+                if dist_coche > DISTANCIA_MAXIMA:
+                    print(f"[dron] 🚨 ALERTA: Coche perdido a {dist_coche:.1f}m. ABORTANDO MISIÓN.")
+                    mision_abortada = True  
+                    
+                    # 1. Creamos waypoint 1: Volver a base PERO manteniendo la altura de vuelo actual
+                    wp_regreso = [self.home_position[0], self.home_position[1], self.target_altitude]
+                    
+                    # 2. Creamos waypoint 2: Una vez sobre la base, descender
+                    wp_aterrizaje = [self.home_position[0], self.home_position[1], HOME_ALT_MIN]
+                    
+                    # Asignamos esta nueva ruta de emergencia
+                    self.waypoints = [wp_regreso, wp_aterrizaje]
+                    self.target_index = 0
+                    
+                    # Forzamos INMEDIATAMENTE al dron a mirar al primer waypoint (el alto)
+                    self.target_position[0] = wp_regreso[0]
+                    self.target_position[1] = wp_regreso[1]
+                    self.target_altitude = wp_regreso[2] # ¡Mantiene su altura!
+            # --- FIN SEGURIDAD ---
 
             # Sin mision aun -> motores apagados (en suelo)
             if not mission_armed:
