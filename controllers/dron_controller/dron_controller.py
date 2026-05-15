@@ -1,7 +1,14 @@
 """
-Controlador DJI Mavic 2 PRO.
-Recibe lista de waypoints del parking_supervisor por Receiver canal 2.
-Sin waypoints: hover en posicion actual.
+DJI Mavic 2 Pro controller for the SPOT Webots simulation.
+
+This controller receives a list of waypoints from the parking supervisor through
+a Webots Receiver node on channel 2. Once the mission is armed, the drone follows
+the waypoint sequence and acts as the leading agent for the guided parking demo.
+
+If no waypoints are available, the drone remains inactive on the ground. During
+an active mission, the controller also monitors the distance to the vehicle. If
+the vehicle is lost, the mission is aborted and the drone returns to its home
+position.
 """
 
 from controller import Supervisor
@@ -14,97 +21,183 @@ except ImportError:
     sys.exit("Warning: 'numpy' module not found.")
 
 
-dev = True  # True para debug, False no debug (menos prints, etc)
+# Development flag used to enable periodic debug information.
+dev = True
 
+# Minimum altitude used when the drone is idle or returning to base.
 HOME_ALT_MIN = 0.5
 
 
 def clamp(value, value_min, value_max):
+    """
+    Limit a value to the provided range.
+    """
     return min(max(value, value_min), value_max)
 
 
 class Mavic(Supervisor):
+    """
+    Custom Webots controller based on the built-in Mavic drone model.
+
+    The controller reuses the stable low-level motor control structure provided
+    by the Webots example and extends it with mission-level behavior, waypoint
+    navigation and safety monitoring.
+    """
+
+    # Basic vertical stabilization constants.
     K_VERTICAL_THRUST = 68.5
     K_VERTICAL_OFFSET = 0.6
     K_VERTICAL_P = 3.0
+
+    # Roll and pitch control constants.
     K_ROLL_P = 50.0
     K_PITCH_P = 30.0
 
+    # Maximum yaw correction applied at each control step.
     MAX_YAW_DISTURBANCE = 0.4
-    # Pitch mas negativo => mayor inclinacion hacia adelante => mas velocidad de crucero.
-    # -3.0 lo lleva a una velocidad horizontal claramente superior a la del coche.
+
+    # More negative pitch means stronger forward inclination and higher
+    # horizontal cruising speed.
     MAX_PITCH_DISTURBANCE = -3.0
-    # Ganancia distancia->pitch (mas negativa => acelera antes a la velocidad max)
+
+    # Distance-to-pitch gain. A more negative value accelerates the drone
+    # faster towards the maximum pitch disturbance.
     PITCH_DIST_GAIN = -0.35
 
+    # Horizontal distance threshold used to consider a waypoint reached.
     target_precision = 1.5
 
     def __init__(self):
         Supervisor.__init__(self)
         self.time_step = int(self.getBasicTimeStep())
 
+        # =========================
+        # SENSOR INITIALIZATION
+        # =========================
+
+        # Camera is enabled for consistency with the Mavic model, even if the
+        # current controller mainly relies on GPS and IMU data.
         self.camera = self.getDevice("camera")
         self.camera.enable(self.time_step)
+
+        # IMU provides roll, pitch and yaw.
         self.imu = self.getDevice("inertial unit")
         self.imu.enable(self.time_step)
+
+        # GPS provides the drone position inside the Webots world.
         self.gps = self.getDevice("gps")
         self.gps.enable(self.time_step)
+
+        # Gyro provides angular acceleration used for stabilization.
         self.gyro = self.getDevice("gyro")
         self.gyro.enable(self.time_step)
 
+        # Receiver node used to obtain waypoint missions from the supervisor.
+        # In this implementation, the supervisor sends complete waypoint lists
+        # as JSON payloads.
         self.receiver = self.getDevice("receiver")
         if self.receiver is not None:
             self.receiver.enable(self.time_step)
         else:
-            print("AVISO: el dron no tiene Receiver. No recibira waypoints.")
+            print("[drone] Warning: receiver device not found. No waypoint missions will be received.")
+
+        # =========================
+        # ACTUATOR INITIALIZATION
+        # =========================
 
         self.front_left_motor = self.getDevice("front left propeller")
         self.front_right_motor = self.getDevice("front right propeller")
         self.rear_left_motor = self.getDevice("rear left propeller")
         self.rear_right_motor = self.getDevice("rear right propeller")
+
+        # Camera pitch is fixed to provide a stable forward/downward view.
         self.camera_pitch_motor = self.getDevice("camera pitch")
         self.camera_pitch_motor.setPosition(0.7)
 
-        for motor in [self.front_left_motor, self.front_right_motor,
-                      self.rear_left_motor, self.rear_right_motor]:
+        # Motors are set to velocity control mode.
+        for motor in [
+            self.front_left_motor,
+            self.front_right_motor,
+            self.rear_left_motor,
+            self.rear_right_motor
+        ]:
             motor.setPosition(float('inf'))
             motor.setVelocity(1)
 
-        self.current_pose = 6 * [0]   # x, y, z, roll, pitch, yaw
+        # =========================
+        # MISSION STATE
+        # =========================
+
+        # Current drone pose: x, y, z, roll, pitch, yaw.
+        self.current_pose = 6 * [0]
+
+        # Waypoints received from the supervisor.
         self.waypoints = []
         self.target_index = 0
         self.target_position = [0, 0, 0]
-        self.target_altitude = 0.5    # arranca a baja altura
-        
-        # NUEVO: Obtener referencia al coche (Asumiendo que el DEF en Webots es 'CAR')
-        self.coche_nodo = self.getFromDef("CAR")
-        self.home_position = None  # Guardaremos la base aquí
+        self.target_altitude = HOME_ALT_MIN
+
+        # Reference to the simulated vehicle node. The Webots world must define
+        # the car with DEF name "CAR" for this lookup to work.
+        self.car_node = self.getFromDef("CAR")
+
+        # Home position is stored once the simulation provides a valid GPS value.
+        self.home_position = None
 
     def set_position(self, pos):
+        """
+        Store the current drone pose.
+        """
         self.current_pose = pos
 
     def consume_messages(self):
+        """
+        Read and parse pending waypoint missions from the receiver queue.
+
+        Expected payload format:
+            {
+                "waypoints": [[x1, y1, z1], [x2, y2, z2], ...]
+            }
+
+        When a valid mission is received, the first waypoint becomes the
+        immediate navigation target.
+        """
         if self.receiver is None:
             return
+
         while self.receiver.getQueueLength() > 0:
             data = self.receiver.getString()
             self.receiver.nextPacket()
+
             try:
                 payload = json.loads(data)
             except Exception:
-                print(f"Mensaje invalido: {data[:80]}")
+                print(f"[drone] Invalid receiver payload: {data[:80]}")
                 continue
+
             wps = payload.get("waypoints")
+
             if not isinstance(wps, list) or len(wps) == 0:
                 continue
+
             self.waypoints = [list(w) for w in wps]
             self.target_index = 0
-            self.target_position = [self.waypoints[0][0], self.waypoints[0][1], 0]
+            self.target_position = [
+                self.waypoints[0][0],
+                self.waypoints[0][1],
+                0
+            ]
             self.target_altitude = self.waypoints[0][2]
-            print(f"Recibidos {len(self.waypoints)} waypoints. Primero: {self.waypoints[0]}")
+
+            print(f"[drone] Received {len(self.waypoints)} waypoints. First waypoint: {self.waypoints[0]}")
 
     def move_to_target(self):
-        """Devuelve (yaw_disturbance, pitch_disturbance). Avanza indice si llega."""
+        """
+        Compute yaw and pitch disturbances required to move towards the target.
+
+        The method also advances to the next waypoint once the current waypoint
+        is reached according to the configured target precision.
+        """
         if not self.waypoints:
             return 0.0, 0.0
 
@@ -114,110 +207,168 @@ class Mavic(Supervisor):
         distance_left = np.sqrt(dist_x ** 2 + dist_y ** 2)
 
         is_last = self.target_index >= len(self.waypoints) - 1
-        # Para waypoints finales (descenso/ascenso) usa precision menor en xy
         precision = self.target_precision
 
+        # If the current waypoint has been reached, move to the next one.
         if distance_left < precision:
             if is_last:
-                # Ya en el ultimo: mantener altura objetivo, no avanzar
+                # Last waypoint reached: keep target altitude and hold position.
                 return 0.0, 0.0
+
             self.target_index += 1
             wp = self.waypoints[self.target_index]
+
             self.target_position[0] = wp[0]
             self.target_position[1] = wp[1]
             self.target_altitude = wp[2]
+
             target_x, target_y = wp[0], wp[1]
             dist_x = target_x - self.current_pose[0]
             dist_y = target_y - self.current_pose[1]
             distance_left = np.sqrt(dist_x ** 2 + dist_y ** 2)
 
+        # Compute the angular difference between drone yaw and target direction.
         target_angle = np.arctan2(dist_y, dist_x)
         angle_left = target_angle - self.current_pose[5]
         angle_left = (angle_left + np.pi) % (2 * np.pi) - np.pi
 
-        yaw_disturbance = clamp(angle_left, -self.MAX_YAW_DISTURBANCE, self.MAX_YAW_DISTURBANCE)
+        yaw_disturbance = clamp(
+            angle_left,
+            -self.MAX_YAW_DISTURBANCE,
+            self.MAX_YAW_DISTURBANCE
+        )
+
+        # Move forward only when the drone is approximately aligned with the
+        # target direction. Otherwise, rotate first.
         if abs(angle_left) < 0.5:
-            pitch_disturbance = clamp(distance_left * self.PITCH_DIST_GAIN,
-                                      self.MAX_PITCH_DISTURBANCE, 0)
+            pitch_disturbance = clamp(
+                distance_left * self.PITCH_DIST_GAIN,
+                self.MAX_PITCH_DISTURBANCE,
+                0
+            )
         else:
             pitch_disturbance = 0
+
         return yaw_disturbance, pitch_disturbance
 
     def stop_motors(self):
-        for m in (self.front_left_motor, self.front_right_motor,
-                  self.rear_left_motor, self.rear_right_motor):
-            m.setVelocity(0)
+        """
+        Stop all propellers.
+        """
+        for motor in (
+            self.front_left_motor,
+            self.front_right_motor,
+            self.rear_left_motor,
+            self.rear_right_motor
+        ):
+            motor.setVelocity(0)
 
     def run(self):
+        """
+        Main drone control loop.
+        """
         self.target_position = [0.0, 0.0, 0.0]
         self.target_altitude = HOME_ALT_MIN
+
         yaw_disturbance = 0.0
         pitch_disturbance = 0.0
-        mission_armed = False  # True una vez recibido primer waypoint
+
+        # The mission becomes armed once the first valid waypoint list is received.
+        mission_armed = False
+
         last_log = 0.0
-        
-        # --- AÑADE ESTA LÍNEA ---
-        mision_abortada = False
+        mission_aborted = False
 
         t1 = self.getTime()
-        while self.step(self.time_step) != -1:                      
-            had_no_wps = not self.waypoints
-            
-            # --- MODIFICADO: Ignorar radio si abortamos ---
-            if mision_abortada:
-                # Vaciar buzón sin hacer caso
+
+        while self.step(self.time_step) != -1:
+            had_no_waypoints = not self.waypoints
+
+            # =========================
+            # A. MISSION RECEPTION
+            # =========================
+
+            if mission_aborted:
+                # If the mission has been aborted, ignore any new messages from
+                # the receiver queue to avoid replacing the emergency route.
                 while self.receiver is not None and self.receiver.getQueueLength() > 0:
                     self.receiver.nextPacket()
             else:
                 self.consume_messages()
-            # ----------------------------------------------
-            
-            self.consume_messages()
-            if had_no_wps and self.waypoints:
+
+            if had_no_waypoints and self.waypoints:
                 mission_armed = True
-                print(f"[dron] mision armada con {len(self.waypoints)} waypoints")
+                print(f"[drone] Mission armed with {len(self.waypoints)} waypoints.")
+
+            # =========================
+            # B. CURRENT DRONE STATE
+            # =========================
 
             roll, pitch, yaw = self.imu.getRollPitchYaw()
             x_pos, y_pos, altitude = self.gps.getValues()
             roll_acceleration, pitch_acceleration, _ = self.gyro.getValues()
+
             self.set_position([x_pos, y_pos, altitude, roll, pitch, yaw])
-            
-            # --- INICIO SEGURIDAD: CONTROL DE DISTANCIA ---
+
+            # Store the initial home/base position once GPS is valid.
             if self.home_position is None and not np.isnan(x_pos):
                 self.home_position = [x_pos, y_pos, HOME_ALT_MIN]
 
-            if self.waypoints and self.coche_nodo and mission_armed and not mision_abortada:
-                pos_coche = self.coche_nodo.getPosition()
-                dist_coche = np.sqrt((pos_coche[0] - x_pos)**2 + (pos_coche[1] - y_pos)**2)
+            # =========================
+            # C. SAFETY MONITORING
+            # =========================
 
-                DISTANCIA_MAXIMA = 25.0  
+            # During an active mission, monitor the distance between the drone
+            # and the vehicle. If the car is too far away, the drone assumes
+            # the vehicle has been lost and aborts the mission.
+            if self.waypoints and self.car_node and mission_armed and not mission_aborted:
+                car_position = self.car_node.getPosition()
+                car_distance = np.sqrt(
+                    (car_position[0] - x_pos) ** 2 +
+                    (car_position[1] - y_pos) ** 2
+                )
 
-                if dist_coche > DISTANCIA_MAXIMA:
-                    print(f"[dron] 🚨 ALERTA: Coche perdido a {dist_coche:.1f}m. ABORTANDO MISIÓN.")
-                    mision_abortada = True  
-                    
-                    # 1. Creamos waypoint 1: Volver a base PERO manteniendo la altura de vuelo actual
-                    wp_regreso = [self.home_position[0], self.home_position[1], self.target_altitude]
-                    
-                    # 2. Creamos waypoint 2: Una vez sobre la base, descender
-                    wp_aterrizaje = [self.home_position[0], self.home_position[1], HOME_ALT_MIN]
-                    
-                    # Asignamos esta nueva ruta de emergencia
-                    self.waypoints = [wp_regreso, wp_aterrizaje]
+                MAX_CAR_DISTANCE = 25.0
+
+                if car_distance > MAX_CAR_DISTANCE:
+                    print(f"[drone] Alert: vehicle lost at {car_distance:.1f} m. Aborting mission.")
+                    mission_aborted = True
+
+                    # Emergency waypoint 1: return to base while preserving
+                    # the current flight altitude.
+                    return_wp = [
+                        self.home_position[0],
+                        self.home_position[1],
+                        self.target_altitude
+                    ]
+
+                    # Emergency waypoint 2: descend once the drone is above base.
+                    landing_wp = [
+                        self.home_position[0],
+                        self.home_position[1],
+                        HOME_ALT_MIN
+                    ]
+
+                    # Replace the original mission with the emergency route.
+                    self.waypoints = [return_wp, landing_wp]
                     self.target_index = 0
-                    
-                    # Forzamos INMEDIATAMENTE al dron a mirar al primer waypoint (el alto)
-                    self.target_position[0] = wp_regreso[0]
-                    self.target_position[1] = wp_regreso[1]
-                    self.target_altitude = wp_regreso[2] # ¡Mantiene su altura!
-            # --- FIN SEGURIDAD ---
 
-            # Sin mision aun -> motores apagados (en suelo)
+                    self.target_position[0] = return_wp[0]
+                    self.target_position[1] = return_wp[1]
+                    self.target_altitude = return_wp[2]
+
+            # =========================
+            # D. IDLE / MISSION CONTROL
+            # =========================
+
+            # Before any mission is received, keep the drone on the ground.
             if not mission_armed:
                 self.stop_motors()
                 continue
 
             if self.waypoints:
+                # Move horizontally only after reaching a safe altitude close
+                # to the target altitude.
                 if altitude > self.target_altitude - 0.3:
                     if self.getTime() - t1 > 0.1:
                         yaw_disturbance, pitch_disturbance = self.move_to_target()
@@ -226,37 +377,71 @@ class Mavic(Supervisor):
                     yaw_disturbance = 0.0
                     pitch_disturbance = 0.0
             else:
-                # Sin waypoints pero ya armado -> hover en sitio actual
+                # If no waypoints remain after arming, hover at the current position.
                 self.target_position[0] = x_pos
                 self.target_position[1] = y_pos
                 yaw_disturbance = 0.0
                 pitch_disturbance = 0.0
 
-            # Log periodico del estado
+            # =========================
+            # E. PERIODIC DEBUG LOGGING
+            # =========================
+
             now = self.getTime()
+
             if now - last_log > 1.0:
                 if self.waypoints:
-                    tx, ty, tz = (self.target_position[0], self.target_position[1], self.target_altitude)
-                    dx_t, dy_t = tx - x_pos, ty - y_pos
-                    d = (dx_t ** 2 + dy_t ** 2) ** 0.5
-                    tgt_ang = np.arctan2(dy_t, dx_t)
-                    al = (tgt_ang - yaw + np.pi) % (2 * np.pi) - np.pi
+                    tx, ty, tz = (
+                        self.target_position[0],
+                        self.target_position[1],
+                        self.target_altitude
+                    )
+
+                    dx_t = tx - x_pos
+                    dy_t = ty - y_pos
+                    distance_to_target = (dx_t ** 2 + dy_t ** 2) ** 0.5
+                    target_angle = np.arctan2(dy_t, dx_t)
+                    angle_left = (target_angle - yaw + np.pi) % (2 * np.pi) - np.pi
+
                     if dev:
-                        print(f"[dron] wp {self.target_index+1}/{len(self.waypoints)} "
+                        print(
+                            f"[drone] wp {self.target_index + 1}/{len(self.waypoints)} "
                             f"pos=({x_pos:.1f},{y_pos:.1f},{altitude:.1f}) "
-                            f"target=({tx:.1f},{ty:.1f},{tz:.1f}) dxy={d:.1f} "
-                            f"yaw={yaw:.2f} tgt_ang={tgt_ang:.2f} angle_left={al:.2f} "
-                            f"yawD={yaw_disturbance:.2f} pitchD={pitch_disturbance:.2f}")
+                            f"target=({tx:.1f},{ty:.1f},{tz:.1f}) "
+                            f"dxy={distance_to_target:.1f} "
+                            f"yaw={yaw:.2f} "
+                            f"target_angle={target_angle:.2f} "
+                            f"angle_left={angle_left:.2f} "
+                            f"yawD={yaw_disturbance:.2f} "
+                            f"pitchD={pitch_disturbance:.2f}"
+                        )
                 else:
-                    print(f"[dron] hover en ({x_pos:.1f},{y_pos:.1f},{altitude:.1f})")
+                    print(f"[drone] Hovering at ({x_pos:.1f},{y_pos:.1f},{altitude:.1f})")
+
                 last_log = now
 
+            # =========================
+            # F. LOW-LEVEL MOTOR CONTROL
+            # =========================
+
+            # Stabilization inputs derived from current orientation.
             roll_input = self.K_ROLL_P * clamp(roll, -1, 1) + roll_acceleration
-            pitch_input = self.K_PITCH_P * clamp(pitch, -1, 1) + pitch_acceleration + pitch_disturbance
+            pitch_input = (
+                self.K_PITCH_P * clamp(pitch, -1, 1) +
+                pitch_acceleration +
+                pitch_disturbance
+            )
             yaw_input = yaw_disturbance
-            clamped_diff_alt = clamp(self.target_altitude - altitude + self.K_VERTICAL_OFFSET, -1, 1)
+
+            # Altitude control input.
+            clamped_diff_alt = clamp(
+                self.target_altitude - altitude + self.K_VERTICAL_OFFSET,
+                -1,
+                1
+            )
             vertical_input = self.K_VERTICAL_P * pow(clamped_diff_alt, 3.0)
 
+            # Motor mixing for the quadrotor configuration.
             m1 = self.K_VERTICAL_THRUST + vertical_input - yaw_input + pitch_input - roll_input
             m2 = self.K_VERTICAL_THRUST + vertical_input + yaw_input + pitch_input + roll_input
             m3 = self.K_VERTICAL_THRUST + vertical_input + yaw_input - pitch_input - roll_input
