@@ -1,73 +1,110 @@
+"""
+Follower vehicle controller for the SPOT Webots simulation.
+
+This controller receives navigation targets from the drone/supervisor through
+a Webots Receiver node and drives the vehicle towards those targets.
+
+The vehicle model is intentionally simplified: the goal is not to implement
+a fully optimized autonomous driving system, but to validate the drone-guided
+navigation flow inside the simulation.
+"""
+
 from vehicle import Driver
 import math
 import time
 
+
+# =========================
+# CONTROLLER INITIALIZATION
+# =========================
+
 driver = Driver()
 TIME_STEP = int(driver.getBasicTimeStep())
 
+# Development flag used to enable periodic debug information.
 dev = True
 
+
 # =========================
-# PARAMETROS
+# CONTROL PARAMETERS
 # =========================
 
-# El supervisor envia targets densificados con lookahead, asi que el coche solo
-# entra en la zona de frenado al final (sobre la plaza). Con estos valores se
-# acerca mejor al centro de la plaza antes de detenerse.
+# The supervisor/drone sends dense target points with lookahead.
+# Therefore, the vehicle only enters the braking zone near the final spot.
 DISTANCIA_FRENADO = 1.0
 DISTANCIA_PARADA = 0.3
 
-VELOCIDAD_CRUCERO = 5.0  # m/s
+# Default vehicle cruising speed in m/s.
+VELOCIDAD_CRUCERO = 5.0
 
+# Steering controller gain and physical steering limit.
 KP_STEER = 1.2
 MAX_STEERING_ANGLE = math.radians(30)
 
+# Communication timeout. If no target is received for this time,
+# the vehicle stops for safety.
 TIMEOUT_SENAL = 2.0
 DEBUG_LOG_INTERVAL = 0.5
 
-# >>> REVERSA: manejar giros muy cerrados <<<
-REVERSE_DURATION = 2.0              # segundos en marcha atrás
-REVERSE_SPEED = -2.0                # m/s negativa = hacia atrás
-REVERSE_ERROR_THRESHOLD = math.radians(150)   # 150° de error para activar
-REVERSE_DISTANCE_THRESHOLD = 10.0   # solo si está a menos de 10 m del target
+# Reverse maneuver parameters.
+# This is used when the vehicle faces almost the opposite direction
+# of the target and needs to recover from a sharp turn.
+REVERSE_DURATION = 2.0
+REVERSE_SPEED = -2.0
+REVERSE_ERROR_THRESHOLD = math.radians(150)
+REVERSE_DISTANCE_THRESHOLD = 10.0
+
 
 # =========================
-# DISPOSITIVOS
+# DEVICE INITIALIZATION
 # =========================
 
+# GPS provides the current vehicle position inside the Webots world.
 gps = driver.getDevice("gps")
 gps.enable(TIME_STEP)
 
+# Compass provides orientation data used to compute the heading angle.
 compass = driver.getDevice("compass")
 compass.enable(TIME_STEP)
 
+# Receiver node used to obtain target coordinates from the drone/supervisor.
 receiver = driver.getDevice("receiver")
 receiver.enable(TIME_STEP)
+
+# Channel 1 must match the emitter channel used by the drone/supervisor.
 receiver.setChannel(1)
 
-print("coche_seguidor activo. Esperando objetivo del supervisor.")
+print("Follower vehicle controller active. Waiting for navigation targets.")
+
 
 # =========================
-# ESTADO
+# STATE VARIABLES
 # =========================
 
 target_x = None
 target_y = None
 
-ultimo_mensaje = time.time()
+last_message_time = time.time()
 last_debug_log = 0.0
 
 previous_target_x = None
 previous_target_y = None
 
-# >>> REVERSA: temporizador <<<
+# Timestamp until which the reverse maneuver remains active.
 reverse_until = 0.0
 
+
 # =========================
-# UTILS
+# UTILITY FUNCTIONS
 # =========================
 
 def normalize_angle(angle):
+    """
+    Normalize an angle to the range [-pi, pi].
+
+    This avoids discontinuities when comparing orientations close to
+    the -pi / pi boundary.
+    """
     while angle > math.pi:
         angle -= 2 * math.pi
     while angle < -math.pi:
@@ -76,144 +113,192 @@ def normalize_angle(angle):
 
 
 def heading_from_compass(compass_values):
+    """
+    Compute the vehicle heading angle from Webots compass values.
+    """
     return math.atan2(compass_values[1], compass_values[0])
 
 
 # =========================
-# LOOP PRINCIPAL
+# MAIN CONTROL LOOP
 # =========================
 
 while driver.step() != -1:
 
     # =========================
-    # A. RECEPCION OBJETIVO
+    # A. TARGET RECEPTION
     # =========================
+
+    # Process all pending messages from the receiver queue.
+    # Each message is expected to contain target coordinates
+    # in the format: "x,y".
     while receiver.getQueueLength() > 0:
-        mensaje = receiver.getString()
+        message = receiver.getString()
         receiver.nextPacket()
+
         try:
-            partes = mensaje.split(',')
-            new_target_x = float(partes[0])
-            new_target_y = float(partes[1])
+            parts = message.split(',')
+            new_target_x = float(parts[0])
+            new_target_y = float(parts[1])
+
+            # Update target only if the received position is different.
             if new_target_x != previous_target_x or new_target_y != previous_target_y:
                 target_x = new_target_x
                 target_y = new_target_y
                 previous_target_x = target_x
                 previous_target_y = target_y
+
                 if dev:
-                    print(f"[coche] NUEVO OBJETIVO RECIBIDO: ({target_x:.2f}, {target_y:.2f})")
-            ultimo_mensaje = time.time()
+                    print(f"[car] New target received: ({target_x:.2f}, {target_y:.2f})")
+
+            last_message_time = time.time()
+
         except Exception:
-            print(f"Mensaje invalido: {mensaje}")
+            print(f"[car] Invalid receiver message: {message}")
 
     # =========================
-    # B. SEGURIDAD
+    # B. SAFETY CHECKS
     # =========================
+
+    # If no target has been received yet, keep the vehicle stopped.
     if target_x is None or target_y is None:
         driver.setCruisingSpeed(0.0)
         driver.setBrakeIntensity(1.0)
         continue
 
-    if (time.time() - ultimo_mensaje) > TIMEOUT_SENAL:
+    # If communication is lost, stop the vehicle and clear the target.
+    if (time.time() - last_message_time) > TIMEOUT_SENAL:
         driver.setCruisingSpeed(0.0)
         driver.setBrakeIntensity(1.0)
         target_x = target_y = None
         continue
 
     # =========================
-    # C. ESTADO ACTUAL
+    # C. CURRENT VEHICLE STATE
     # =========================
+
+    # Read current vehicle position.
     pos = gps.getValues()
-    mi_x, mi_y = pos[0], pos[1]
+    car_x, car_y = pos[0], pos[1]
 
-    dx = target_x - mi_x
-    dy = target_y - mi_y
-    distancia = math.hypot(dx, dy)
+    # Compute vector and distance to the current target.
+    dx = target_x - car_x
+    dy = target_y - car_y
+    distance = math.hypot(dx, dy)
 
-    brujula = compass.getValues()
-    mi_angulo = normalize_angle(heading_from_compass(brujula))
-    angulo_objetivo = math.atan2(dx, dy)
-    error = normalize_angle(angulo_objetivo - mi_angulo)
+    # Compute current heading and heading error.
+    compass_values = compass.getValues()
+    car_heading = normalize_angle(heading_from_compass(compass_values))
+    target_angle = math.atan2(dx, dy)
+    heading_error = normalize_angle(target_angle - car_heading)
 
-    # >>> REVERSA: activar si el error es muy grande y estamos cerca <<<
-    if (time.time() > reverse_until and
-        abs(error) > REVERSE_ERROR_THRESHOLD and
-        distancia < REVERSE_DISTANCE_THRESHOLD):
+    # =========================
+    # D. REVERSE MANEUVER
+    # =========================
+
+    # Trigger reverse maneuver if the vehicle is close to the target
+    # but facing almost the opposite direction.
+    if (
+        time.time() > reverse_until
+        and abs(heading_error) > REVERSE_ERROR_THRESHOLD
+        and distance < REVERSE_DISTANCE_THRESHOLD
+    ):
         reverse_until = time.time() + REVERSE_DURATION
-        if dev:
-            print("[coche] INICIANDO MANIOBRA DE MARCHA ATRÁS")
 
-    # Si estamos dentro del tiempo de reversa, la aplicamos
+        if dev:
+            print("[car] Starting reverse recovery maneuver.")
+
+    # Execute reverse maneuver while the timer is active.
     if time.time() < reverse_until:
         driver.setBrakeIntensity(0.0)
-        driver.setCruisingSpeed(REVERSE_SPEED)  # negativa → marcha atrás
-        # El volante gira al máximo hacia el lado contrario del error
-        steer_reverse = -math.copysign(MAX_STEERING_ANGLE, error)
-        driver.setSteeringAngle(steer_reverse)
+        driver.setCruisingSpeed(REVERSE_SPEED)
+
+        # Turn the steering wheel in the opposite direction of the error
+        # to recover vehicle alignment.
+        reverse_steer = -math.copysign(MAX_STEERING_ANGLE, heading_error)
+        driver.setSteeringAngle(reverse_steer)
+
         if dev and (time.time() - last_debug_log) >= DEBUG_LOG_INTERVAL:
             last_debug_log = time.time()
             print(
-                f"[coche] REVERSA pos=({mi_x:.2f},{mi_y:.2f}) "
-                f"error={error:.2f} steer={steer_reverse:.2f} speed={REVERSE_SPEED:.2f}"
+                f"[car] Reverse maneuver "
+                f"pos=({car_x:.2f},{car_y:.2f}) "
+                f"error={heading_error:.2f} "
+                f"steer={reverse_steer:.2f} "
+                f"speed={REVERSE_SPEED:.2f}"
             )
-        continue   # saltamos el control normal
+
+        # Skip normal control while reversing.
+        continue
 
     # =========================
-    # D. STEERING (normal)
-    # =========================
-    steer_cmd = KP_STEER * math.tanh(error)
-    angulo_volante = max(-MAX_STEERING_ANGLE, min(MAX_STEERING_ANGLE, steer_cmd))
-    driver.setSteeringAngle(angulo_volante)
-
-    # =========================
-    # E. VELOCIDAD
+    # E. NORMAL STEERING CONTROL
     # =========================
 
-    # Velocidad base según alineación (0 = perpendicular, 1 = perfecto)
-    alignment = max(0.0, 1.0 - abs(error) / math.pi)
+    # Smooth steering command based on the heading error.
+    # tanh limits aggressive steering changes.
+    steer_cmd = KP_STEER * math.tanh(heading_error)
+
+    # Clamp steering command to vehicle physical limits.
+    steering_angle = max(
+        -MAX_STEERING_ANGLE,
+        min(MAX_STEERING_ANGLE, steer_cmd)
+    )
+
+    driver.setSteeringAngle(steering_angle)
+
+    # =========================
+    # F. SPEED CONTROL
+    # =========================
+
+    # Reduce speed when the vehicle is poorly aligned with the target.
+    # alignment = 1 means perfect alignment, 0 means perpendicular/opposite.
+    alignment = max(0.0, 1.0 - abs(heading_error) / math.pi)
     speed_cmd = VELOCIDAD_CRUCERO * alignment
 
-    # Si el error es muy grande (>150°) y estamos cerca (<5 m), avance muy lento para no pasarnos
-    if abs(error) > math.radians(150) and distancia < 5.0:
-        speed_cmd = 1.0 / 3.6   # avance mínimo para poder girar
-    # Si no, asegurar una velocidad mínima razonable para giros amplios (0.5 m/s)
+    # If the heading error is very large and the target is close,
+    # advance slowly to avoid overshooting the target.
+    if abs(heading_error) > math.radians(150) and distance < 5.0:
+        speed_cmd = 1.0 / 3.6
     else:
-        speed_cmd = max(speed_cmd, 1.5)   # al menos 1.5 m/s para poder girar bien
-
-    # Evitar bloqueo total (ya cubierto por el mínimo anterior)
-    # speed_cmd = max(speed_cmd, 0.5 / 3.6)  # sobra, lo quitamos
+        # Maintain a minimum speed so the vehicle can complete wide turns.
+        speed_cmd = max(speed_cmd, 1.5)
 
     # =========================
-    # F. FRENADO (normal)
+    # G. BRAKING CONTROL
     # =========================
-    if distancia < DISTANCIA_PARADA:
+
+    if distance < DISTANCIA_PARADA:
         driver.setCruisingSpeed(0.0)
         driver.setBrakeIntensity(1.0)
         speed_cmd = 0.0
         brake_cmd = 1.0
-    elif distancia < DISTANCIA_FRENADO:
+
+    elif distance < DISTANCIA_FRENADO:
         driver.setCruisingSpeed(0.0)
         driver.setBrakeIntensity(0.2)
         speed_cmd = 0.0
         brake_cmd = 0.2
+
     else:
         driver.setBrakeIntensity(0.0)
         driver.setCruisingSpeed(speed_cmd)
         brake_cmd = 0.0
 
     # =========================
-    # G. DEBUG
+    # H. DEBUG LOGGING
     # =========================
+
     if dev and (time.time() - last_debug_log) >= DEBUG_LOG_INTERVAL:
         last_debug_log = time.time()
         print(
-            f"[coche] pos=({mi_x:.2f}, {mi_y:.2f}) "
+            f"[car] pos=({car_x:.2f}, {car_y:.2f}) "
             f"target=({target_x:.2f}, {target_y:.2f}) "
-            f"dist={distancia:.2f} "
-            f"heading={mi_angulo:.2f} "
-            f"target_ang={angulo_objetivo:.2f} "
-            f"error={error:.2f} "
-            f"steer={angulo_volante:.2f} "
+            f"distance={distance:.2f} "
+            f"heading={car_heading:.2f} "
+            f"target_angle={target_angle:.2f} "
+            f"error={heading_error:.2f} "
+            f"steer={steering_angle:.2f} "
             f"speed={speed_cmd:.2f} "
             f"brake={brake_cmd:.2f}"
         )
