@@ -54,6 +54,12 @@ OVERTAKE_DEBOUNCE = 1.0
 # becomes meaningful and overtake detection can start.
 OVERTAKE_ARM_DISTANCE = 3.0
 
+# Solid model string set on the obstacle car's recognition tag. The drone
+# uses this to filter the recognized objects returned by the camera and
+# distinguish the obstacle from any other vehicle in view. Worlds without
+# an obstacle car never see this string, so the scenario stays inactive.
+OBSTACLE_MODEL = "obstaculo"
+
 
 def clamp(value, value_min, value_max):
     """
@@ -107,6 +113,16 @@ class Mavic(Supervisor):
         self.camera = self.getDevice("camera")
         self.camera.enable(self.time_step)
 
+        # Try to enable Recognition on the camera. Only worlds that include a
+        # Recognition node inside the Camera will actually return objects.
+        # When the world has no Recognition node this call fails silently and
+        # the obstacle scenario stays inactive.
+        try:
+            self.camera.recognitionEnable(self.time_step)
+            self.recognition_enabled = True
+        except Exception:
+            self.recognition_enabled = False
+
         # IMU provides roll, pitch and yaw.
         self.imu = self.getDevice("inertial unit")
         self.imu.enable(self.time_step)
@@ -133,6 +149,12 @@ class Mavic(Supervisor):
         self.emitter_supervisor = self.getDevice("emitter_supervisor")
         if self.emitter_supervisor is None:
             print("[drone] Warning: emitter_supervisor device not found. Drone events will not be sent.")
+
+        # Optional emitter used to trigger the obstacle car (channel 4) when
+        # the collision-prevention scenario is set up in the current world.
+        # When the emitter is not present the obstacle car simply never gets
+        # told to move; the scenario is effectively disabled for that world.
+        self.emitter_obstaculo = self.getDevice("emitter_obstaculo")
 
         # =========================
         # ACTUATOR INITIALIZATION
@@ -185,6 +207,19 @@ class Mavic(Supervisor):
         # been ahead of the car at least once during this mission.
         self.overtake_detection_armed = False
 
+        # =========================
+        # OBSTACLE SCENARIO STATE
+        # =========================
+
+        # State machine for the optional collision-prevention scenario:
+        #   "armed"   - mission running, scanning for the obstacle.
+        #   "visible" - obstacle in view, drone hovering, alarm active.
+        #   "cleared" - obstacle no longer in view, mission resumed.
+        # The scenario only progresses past "armed" if the world actually has
+        # a recognizable obstacle car. Otherwise it stays in "armed" forever
+        # without affecting normal flight.
+        self.obstacle_state = "armed"
+
     def send_event(self, payload):
         """
         Send a JSON event to the supervisor through the dedicated emitter.
@@ -196,6 +231,43 @@ class Mavic(Supervisor):
             self.emitter_supervisor.send(json.dumps(payload).encode('utf-8'))
         except Exception as e:
             print(f"[drone] Failed to send event: {e}")
+
+    def trigger_obstacle_car(self, message):
+        """
+        Send a plain string command to the obstacle car on channel 4.
+
+        Does nothing in worlds without an obstacle emitter.
+        """
+        if self.emitter_obstaculo is None:
+            return
+
+        try:
+            self.emitter_obstaculo.send(message.encode('utf-8'))
+        except Exception as e:
+            print(f"[drone] Failed to send obstacle command: {e}")
+
+    def obstacle_in_view(self):
+        """
+        Return True if camera recognition currently reports any object whose
+        model field equals OBSTACLE_MODEL. Returns False when recognition is
+        not enabled in the current world.
+        """
+        if not self.recognition_enabled:
+            return False
+
+        try:
+            objects = self.camera.getRecognitionObjects()
+        except Exception:
+            return False
+
+        for obj in objects:
+            model = obj.getModel() if hasattr(obj, "getModel") else getattr(obj, "model", "")
+            if isinstance(model, bytes):
+                model = model.decode("utf-8", errors="ignore")
+            if model == OBSTACLE_MODEL:
+                return True
+
+        return False
 
     def car_projection_ahead(self, x_pos, y_pos):
         """
@@ -490,6 +562,38 @@ class Mavic(Supervisor):
                 self.target_altitude = return_wp[2]
 
             # =========================
+            # C.5. OBSTACLE SCENARIO
+            # =========================
+
+            # Collision-prevention scenario based on the camera's Recognition
+            # output. While the obstacle is in view the drone hovers in place
+            # and asks the obstacle car to clear the route. The scenario stays
+            # inactive in worlds that do not contain a recognizable obstacle.
+            obstacle_hold = False
+            if mission_armed and not mission_aborted:
+                seen_obstacle = self.obstacle_in_view()
+
+                if self.obstacle_state == "armed" and seen_obstacle:
+                    print("[drone] Obstacle detected by recognition. Hovering.")
+                    self.trigger_obstacle_car("obstacle_seen")
+                    self.send_event({
+                        "type": "obstacle_detected",
+                        "drone_position": [x_pos, y_pos, altitude],
+                        "time": self.getTime(),
+                    })
+                    self.obstacle_state = "visible"
+
+                elif self.obstacle_state == "visible" and not seen_obstacle:
+                    print("[drone] Obstacle cleared from view. Resuming mission.")
+                    self.send_event({
+                        "type": "obstacle_cleared",
+                        "time": self.getTime(),
+                    })
+                    self.obstacle_state = "cleared"
+
+                obstacle_hold = (self.obstacle_state == "visible")
+
+            # =========================
             # D. IDLE / MISSION CONTROL
             # =========================
 
@@ -499,9 +603,14 @@ class Mavic(Supervisor):
                 continue
 
             if self.waypoints:
+                if obstacle_hold:
+                    # Force the drone to hover in place while the obstacle is
+                    # still in the camera frame.
+                    yaw_disturbance = 0.0
+                    pitch_disturbance = 0.0
                 # Move horizontally only after reaching a safe altitude close
                 # to the target altitude.
-                if altitude > self.target_altitude - 0.3:
+                elif altitude > self.target_altitude - 0.3:
                     if self.getTime() - t1 > 0.1:
                         yaw_disturbance, pitch_disturbance = self.move_to_target()
                         t1 = self.getTime()

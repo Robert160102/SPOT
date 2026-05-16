@@ -32,7 +32,7 @@ WorldInfo {
 }
 Viewpoint {
   orientation -0.4847150751797846 0.4751149434701631 0.7343821119722344 1.8937617573571628
-  position 0.87620659504098 -95.68228634569508 47.59616502265102
+  position 16.630000410813 -75.25531175818178 56.19271691988204
   near 0.2
   follow "vehicle"
   followType "Mounted Shot"
@@ -92,6 +92,9 @@ DEF DRONE Mavic2Pro {
       width 400
       height 240
       near 0.2
+      recognition Recognition {
+        maxRange 25
+      }
     }
     Receiver {
       channel 2
@@ -99,6 +102,10 @@ DEF DRONE Mavic2Pro {
     Emitter {
       name "emitter_supervisor"
       channel 3
+    }
+    Emitter {
+      name "emitter_obstaculo"
+      channel 4
     }
   ]
 }
@@ -3143,12 +3150,39 @@ TeslaModel3 {
   name "vehicle(3)"
   controller "<none>"
 }
-TeslaModel3 {
-  translation 25.1541 -46.66 0.230913
+DEF OBSTACULO TeslaModel3 {
+  translation 25.1541 -52.02 0.230913
   rotation 0.0055673791825868214 -6.9233227566552285e-09 0.999984502024425 3.1415899995244905
   color 0.666667 0 0
   name "obstaculo"
-  controller "<none>"
+  controller "coche_obstaculo"
+  sensorsSlotTop [
+    Receiver {
+      channel 4
+    }
+    GPS {
+    }
+    DEF OBSTACULO_TAG Solid {
+      translation 0 0 0.3
+      name "obstaculo_tag"
+      model "obstaculo"
+      recognitionColors [
+        1 0 1
+      ]
+      children [
+        Shape {
+          appearance Appearance {
+            material Material {
+              transparency 1
+            }
+          }
+          geometry Sphere {
+            radius 0.05
+          }
+        }
+      ]
+    }
+  ]
 }
 TeslaModel3 {
   translation 25.265580681652036 -43.44000000556924 0.23079492081962372
