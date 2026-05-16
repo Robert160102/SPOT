@@ -399,6 +399,18 @@ emitter_car.setChannel(1)
 emitter_drone = robot.getDevice("emitter_drone")
 emitter_drone.setChannel(2)
 
+# Receiver used to obtain alerts from the drone (e.g., obstacle detection).
+# Channel 3 is reserved for drone -> supervisor events.
+receiver_drone = robot.getDevice("receiver_drone")
+if receiver_drone is not None:
+    receiver_drone.enable(timestep)
+    receiver_drone.setChannel(3)
+else:
+    print("[supervisor] Warning: receiver_drone device not found. Drone alerts will be ignored.")
+
+# Buffer of pending drone events to forward to the web interface on the next WWI tick.
+pending_drone_events = []
+
 drone_node = robot.getFromDef("DRONE")
 car_node = robot.getFromDef("CAR")
 
@@ -1193,6 +1205,30 @@ while robot.step(timestep) != -1:
     current_time = robot.getTime()
 
     # =========================
+    # DRONE EVENT RECEPTION
+    # =========================
+
+    # Drain any pending events sent by the drone (channel 3). Each event is
+    # expected to be a JSON object describing the alert, e.g.:
+    #   {"type": "obstacle_detected", "position": [x, y], "time": t}
+    #   {"type": "obstacle_cleared",  "time": t}
+    # Events are accumulated and forwarded to the web interface on the next
+    # WWI batch.
+    if receiver_drone is not None:
+        while receiver_drone.getQueueLength() > 0:
+            raw = receiver_drone.getString()
+            receiver_drone.nextPacket()
+
+            try:
+                evt = json.loads(raw)
+            except Exception:
+                print(f"[supervisor] Invalid drone event payload: {raw[:80]}")
+                continue
+
+            print(f"[supervisor] Drone event received: {evt}")
+            pending_drone_events.append(evt)
+
+    # =========================
     # CAMERA PROCESSING
     # =========================
 
@@ -1255,8 +1291,8 @@ while robot.step(timestep) != -1:
     # WEB INTERFACE UPDATE
     # =========================
 
-    if current_time - last_send_time >= ANALYSIS_INTERVAL:
-        if accumulated_results:
+    if current_time - last_send_time >= ANALYSIS_INTERVAL or pending_drone_events:
+        if accumulated_results or pending_drone_events:
             accumulated_results["digital_twin"] = digital_twin
             accumulated_results["mission_state"] = mission_state
             accumulated_results["metrics"] = {
@@ -1265,6 +1301,10 @@ while robot.step(timestep) != -1:
                 "car_time": car_time,
                 "current_time": current_time
             }
+
+            if pending_drone_events:
+                accumulated_results["drone_events"] = list(pending_drone_events)
+                pending_drone_events.clear()
 
             robot.wwiSendText(json.dumps(accumulated_results))
             accumulated_results = {}
