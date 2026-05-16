@@ -64,6 +64,16 @@ CAR_WP_SPACING = 1.5
 CAR_FOLLOW_DISTANCE = 8.0
 CAR_FOLLOW_DISTANCE_FINAL = 0.0
 
+# Lookahead distance applied to the car target while in overtake mode. Must
+# be clearly above the car braking threshold so the vehicle keeps moving
+# between densified waypoints instead of stopping at each one.
+CAR_OVERTAKE_LOOKAHEAD = 6.0
+
+# Cruise speed (m/s) sent to the car while in overtake mode. Roughly double
+# the default cruise speed used by the vehicle controller so the car visibly
+# accelerates and overtakes the drone.
+CAR_OVERTAKE_SPEED = 10.0
+
 # ====================
 # PARKED VEHICLE DETECTION
 # ====================
@@ -211,13 +221,13 @@ ROAD_NODES = {
     "home":          (-5.9,  -71.76),
     "access_south":  (0.0,  -71.77),
     "access_mid":    (0.0,  -52.65),
-    "access_north":  (0.05,   0.12),
+    "access_north":  (0.05,   -3.6),
     "main_west_a":   (-24.0, 0.0),
-    "main_east_b":   (68.0,  0.0),
-    "A_entry":       (-24.0, 24.0),
-    "B_entry":       (68.0,  24.0),
+    "main_east_b":   (59.5,  0.0),
+    "A_entry":       (-28.8, 12.0),
+    "B_entry":       (68.0,  12.0),
     "CL_entry":      (-15.0, -52.6),
-    "CR_entry":      (15.0,  -52.3),
+    "CR_entry":      (13.3,  -52.3),
 }
 
 ROAD_EDGES = [
@@ -539,11 +549,20 @@ def send_drone_waypoints(wps):
     print(f"Sent {len(wps)} waypoints to the drone")
 
 
-def send_car_target(xy):
+def send_car_target(xy, cruise_speed=None):
     """
     Send the current target point to the vehicle controller.
+
+    The base message is "x,y". When a cruise_speed override is provided, a
+    third field is appended ("x,y,speed") so the vehicle controller can use
+    a different cruising speed for this scenario. The car parses the third
+    field if present and falls back to its default otherwise.
     """
-    msg = f"{xy[0]:.3f},{xy[1]:.3f}"
+    if cruise_speed is None:
+        msg = f"{xy[0]:.3f},{xy[1]:.3f}"
+    else:
+        msg = f"{xy[0]:.3f},{xy[1]:.3f},{cruise_speed:.3f}"
+
     emitter_car.send(msg.encode('utf-8'))
 
 
@@ -624,6 +643,18 @@ drone_path_idx = 0
 car_last_xy = None
 car_still_since = None
 
+# Failure simulation flags. Activated by the web interface to simulate the car
+# overtaking the drone (overtake) or simply stopping in the middle of the
+# route (stop). In both cases the drone is expected to detect the failure and
+# abort the mission.
+car_overtake_mode = False
+car_stop_mode = False
+
+# Current waypoint index used by the car while in overtake mode. The car
+# advances through the remaining densified waypoints on its own, following
+# the same planned path but without waiting for the drone.
+car_overtake_idx = 0
+
 # Timing metrics.
 mission_start_time = 0.0
 drone_time = 0.0
@@ -661,14 +692,14 @@ def assign_spot(zone_letter, required_type):
         if info["camera"] in cam_names
     ]
 
-    if required_type is None:
-        type_spots = zone_spots
-    else:
-        type_spots = [
-            (gid, info)
-            for gid, info in zone_spots
-            if info["type"] == required_type
-        ]
+    # When no special type is requested, restrict to normal spots so that
+    # accessible/electric stalls remain reserved for users who need them.
+    effective_type = required_type if required_type else "normal"
+    type_spots = [
+        (gid, info)
+        for gid, info in zone_spots
+        if info["type"] == effective_type
+    ]
 
     if not type_spots:
         print(f"[assign] Zone {zone_letter}: no spots of type '{required_type}'")
@@ -962,6 +993,40 @@ def _project_xy_onto_path(xy, path, start_idx=0):
     return best_i
 
 
+def _point_forward_along_path(path, ref_idx, distance_ahead):
+    """
+    Return a point located distance_ahead meters after path[ref_idx].
+
+    This is the symmetric counterpart of _point_back_along_path. It is used in
+    overtake mode to keep the vehicle target a few meters ahead of the car so
+    the controller does not enter its braking zone on every densified waypoint.
+    If there is not enough path length left, path[-1] is returned.
+    """
+    if ref_idx >= len(path) - 1 or distance_ahead <= 0:
+        return path[-1] if path else (0.0, 0.0)
+
+    remaining = distance_ahead
+    i = ref_idx
+
+    while i < len(path) - 1 and remaining > 0:
+        ax, ay = path[i]
+        bx, by = path[i + 1]
+        seg = math.hypot(bx - ax, by - ay)
+
+        if seg <= 0:
+            i += 1
+            continue
+
+        if seg >= remaining:
+            t = remaining / seg
+            return (ax + (bx - ax) * t, ay + (by - ay) * t)
+
+        remaining -= seg
+        i += 1
+
+    return path[-1]
+
+
 def _point_back_along_path(path, ref_idx, distance_back):
     """
     Return a point located distance_back meters before path[ref_idx].
@@ -1021,13 +1086,41 @@ def update_car_following():
     """
     Update the target sent to the vehicle at each simulation step.
 
-    The vehicle follows a point located behind the drone projection on the
-    densified path. This creates a stable leader-follower behavior and prevents
-    the car from overtaking the drone.
+    Normally the vehicle follows a point located behind the drone projection
+    on the densified path. This creates a stable leader-follower behavior and
+    prevents the car from overtaking the drone.
+
+    Two failure simulation modes can override this behavior:
+    - car_stop_mode: target is cleared so the vehicle receives no new targets
+      and stops naturally after its communication timeout.
+    - car_overtake_mode: target is set directly to the final waypoint of the
+      route so the car drives straight to the parking spot, ignoring the drone
+      and overtaking it.
     """
-    global current_car_target, drone_path_idx
+    global current_car_target, drone_path_idx, car_overtake_idx
 
     if mission_state == "idle" or not car_waypoints:
+        return
+
+    if car_stop_mode:
+        # Stop sending any new target. The vehicle controller will stop once
+        # its own communication timeout elapses.
+        current_car_target = None
+        return
+
+    if car_overtake_mode:
+        # Drive the car along the remaining densified waypoints on its own,
+        # without waiting for the drone. Project the current car position on
+        # the path (forward-only) and aim at a point CAR_OVERTAKE_LOOKAHEAD
+        # meters ahead so the vehicle keeps moving through the route instead
+        # of frantically braking on every densified waypoint.
+        cx, cy = car_xy()
+        car_overtake_idx = _project_xy_onto_path(
+            (cx, cy), car_waypoints, car_overtake_idx
+        )
+        current_car_target = _point_forward_along_path(
+            car_waypoints, car_overtake_idx, CAR_OVERTAKE_LOOKAHEAD
+        )
         return
 
     if mission_state == "approaching":
@@ -1069,6 +1162,7 @@ def update_mission():
     global drone_wp_index, drone_path_idx
     global car_last_xy, car_still_since
     global drone_time, car_time
+    global car_overtake_mode, car_stop_mode, car_overtake_idx
 
     if mission_state == "idle":
         return
@@ -1194,6 +1288,34 @@ def update_mission():
             car_last_xy = None
             car_still_since = None
 
+            # Clear failure simulation flags when the mission ends.
+            car_overtake_mode = False
+            car_stop_mode = False
+            car_overtake_idx = 0
+
+
+def handle_mission_aborted(reason):
+    """
+    Handle a mission_aborted event sent by the drone over channel 3.
+
+    The drone has already switched to its emergency return route on its own,
+    so the supervisor only needs to free the reserved spot, clear the visual
+    marker and switch to the returning state. The car waypoints are kept so
+    the vehicle (if it was the overtake scenario) can still reach the spot on
+    its own. In the stop scenario the car target is already None and the
+    vehicle will remain stopped.
+    """
+    global mission_state, current_spot_id
+
+    print(f"[supervisor] Mission aborted by drone (reason={reason}).")
+
+    if current_spot_id is not None:
+        digital_twin[current_spot_id]["status"] = "free"
+        remove_reserved_marker()
+        current_spot_id = None
+
+    mission_state = "returning"
+
 
 print(
     "Starting main supervisor loop...\n"
@@ -1227,6 +1349,9 @@ while robot.step(timestep) != -1:
 
             print(f"[supervisor] Drone event received: {evt}")
             pending_drone_events.append(evt)
+
+            if evt.get("type") == "mission_aborted":
+                handle_mission_aborted(evt.get("reason", "unknown"))
 
     # =========================
     # CAMERA PROCESSING
@@ -1319,9 +1444,12 @@ while robot.step(timestep) != -1:
     update_car_following()
     update_mission()
 
-    # Send the current vehicle target through the emitter.
+    # Send the current vehicle target through the emitter. While the overtake
+    # scenario is active, attach an elevated cruise speed so the car visibly
+    # accelerates past the drone.
     if current_car_target is not None:
-        send_car_target(current_car_target)
+        speed_override = CAR_OVERTAKE_SPEED if car_overtake_mode else None
+        send_car_target(current_car_target, speed_override)
 
     # =========================
     # WEB INTERFACE REQUEST HANDLING
@@ -1380,6 +1508,35 @@ while robot.step(timestep) != -1:
                     }
 
                 robot.wwiSendText(json.dumps(response))
+
+            elif req.get("action") == "trigger_overtake":
+                if mission_state == "approaching":
+                    car_overtake_mode = True
+                    car_stop_mode = False
+                    # Snap the overtake waypoint index to the closest forward
+                    # waypoint from the current car position so the car
+                    # continues from where it is instead of restarting.
+                    if car_waypoints:
+                        car_overtake_idx = _project_xy_onto_path(
+                            car_xy(), car_waypoints, 0
+                        )
+                    print("[supervisor] Failure scenario: overtake mode activated.")
+                else:
+                    print(
+                        f"[supervisor] Overtake request ignored "
+                        f"(mission_state={mission_state})."
+                    )
+
+            elif req.get("action") == "trigger_stop":
+                if mission_state == "approaching":
+                    car_stop_mode = True
+                    car_overtake_mode = False
+                    print("[supervisor] Failure scenario: stop mode activated.")
+                else:
+                    print(
+                        f"[supervisor] Stop request ignored "
+                        f"(mission_state={mission_state})."
+                    )
 
         except Exception as e:
             print(f"Error processing web interface message: {e}", flush=True)

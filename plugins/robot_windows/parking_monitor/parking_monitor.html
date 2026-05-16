@@ -112,6 +112,62 @@
       .metric-value.active {
         color: #4caf50;
       }
+      .failure-panel {
+        background: #1e242c;
+        border-radius: 8px;
+        padding: 12px 15px;
+        margin-bottom: 15px;
+        border: 1px solid #3a4a5a;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+      }
+      .failure-label {
+        color: #b0c4de;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-right: 6px;
+      }
+      .failure-btn {
+        background: #2b3742;
+        border: 1px solid #4a5a6a;
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        transition: background 0.2s, border-color 0.2s, opacity 0.2s;
+      }
+      .failure-btn:hover:not(:disabled) {
+        background: #3a4a5a;
+        border-color: #6a7a8a;
+      }
+      .failure-btn.overtake {
+        border-color: #d9822b;
+      }
+      .failure-btn.overtake:hover:not(:disabled) {
+        background: #d9822b;
+      }
+      .failure-btn.stop {
+        border-color: #c0392b;
+      }
+      .failure-btn.stop:hover:not(:disabled) {
+        background: #c0392b;
+      }
+      .failure-btn:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
+      .failure-status {
+        color: #f1c40f;
+        font-size: 12px;
+        font-style: italic;
+        min-width: 140px;
+        text-align: left;
+      }
     </style>
   </head>
   <body>
@@ -130,6 +186,17 @@
         <div class="metric-label">Mission Duration</div>
         <div id="metric-mission-duration" class="metric-value">--:--</div>
       </div>
+    </div>
+
+    <div class="failure-panel">
+      <span class="failure-label">Failure simulation</span>
+      <button id="btn-overtake" class="failure-btn overtake" disabled>
+        Simular adelantamiento
+      </button>
+      <button id="btn-stop" class="failure-btn stop" disabled>
+        Simular parada
+      </button>
+      <span id="failure-status" class="failure-status"></span>
     </div>
 
     <div class="mosaic">
@@ -367,6 +434,45 @@
         });
 
         const debugDiv = document.getElementById("debug-info");
+        const btnOvertake = document.getElementById("btn-overtake");
+        const btnStop = document.getElementById("btn-stop");
+        const failureStatus = document.getElementById("failure-status");
+
+        let currentMissionState = "idle";
+        let failureTriggered = null;
+        let failureStatusTimer = null;
+
+        function updateFailureButtons() {
+          const enabled = currentMissionState === "approaching" && !failureTriggered;
+          btnOvertake.disabled = !enabled;
+          btnStop.disabled = !enabled;
+        }
+
+        function showFailureStatus(text, durationMs) {
+          failureStatus.textContent = text;
+          if (failureStatusTimer) clearTimeout(failureStatusTimer);
+          if (durationMs) {
+            failureStatusTimer = setTimeout(() => {
+              failureStatus.textContent = "";
+            }, durationMs);
+          }
+        }
+
+        btnOvertake.addEventListener("click", () => {
+          if (btnOvertake.disabled) return;
+          window.sendToWebots(JSON.stringify({ action: "trigger_overtake" }));
+          failureTriggered = "overtake";
+          showFailureStatus("Coche adelantando al dron...", 0);
+          updateFailureButtons();
+        });
+
+        btnStop.addEventListener("click", () => {
+          if (btnStop.disabled) return;
+          window.sendToWebots(JSON.stringify({ action: "trigger_stop" }));
+          failureTriggered = "stop";
+          showFailureStatus("Coche detenido. Esperando reaccion del dron...", 0);
+          updateFailureButtons();
+        });
 
         // Dibuja las cajas de vehículos detectados (azul)
         function drawVehicleBoxes(camId) {
@@ -445,6 +551,38 @@
             const data = JSON.parse(message);
             const timestamp = new Date().toLocaleTimeString();
             debugDiv.textContent = `Último mensaje: ${timestamp}`;
+
+            if (typeof data.mission_state === "string") {
+              const prevState = currentMissionState;
+              currentMissionState = data.mission_state;
+
+              // Reset failure latch when a brand new approach starts.
+              if (prevState !== "approaching" && currentMissionState === "approaching") {
+                failureTriggered = null;
+                showFailureStatus("", 0);
+              }
+
+              // Once the drone is returning or idle, lock both buttons.
+              if (currentMissionState !== "approaching") {
+                updateFailureButtons();
+              } else {
+                updateFailureButtons();
+              }
+            }
+
+            if (Array.isArray(data.drone_events)) {
+              for (const evt of data.drone_events) {
+                if (evt && evt.type === "mission_aborted") {
+                  const reasonText =
+                    evt.reason === "car_overtake"
+                      ? "Coche adelantado. Dron abortando mision."
+                      : evt.reason === "car_lost"
+                      ? "Coche perdido. Dron volviendo a base."
+                      : "Mision abortada por el dron.";
+                  showFailureStatus(reasonText, 6000);
+                }
+              }
+            }
 
             if (data.metrics) {
               const m = data.metrics;

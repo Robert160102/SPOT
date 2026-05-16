@@ -35,7 +35,12 @@ DISTANCIA_FRENADO = 1.0
 DISTANCIA_PARADA = 0.3
 
 # Default vehicle cruising speed in m/s.
-VELOCIDAD_CRUCERO = 5.0
+VELOCIDAD_CRUCERO_DEFAULT = 5.0
+
+# Active cruise speed. The supervisor may override this value at runtime by
+# appending a third field to the target message (e.g., during the overtake
+# failure scenario, where the car is expected to drive faster).
+velocidad_crucero = VELOCIDAD_CRUCERO_DEFAULT
 
 # Steering controller gain and physical steering limit.
 KP_STEER = 1.2
@@ -130,8 +135,9 @@ while driver.step() != -1:
     # =========================
 
     # Process all pending messages from the receiver queue.
-    # Each message is expected to contain target coordinates
-    # in the format: "x,y".
+    # Each message is expected to contain target coordinates in the format
+    # "x,y" or, when the supervisor wants to override the cruise speed,
+    # "x,y,speed".
     while receiver.getQueueLength() > 0:
         message = receiver.getString()
         receiver.nextPacket()
@@ -150,6 +156,23 @@ while driver.step() != -1:
 
                 if dev:
                     print(f"[car] New target received: ({target_x:.2f}, {target_y:.2f})")
+
+            # Optional cruise speed override. When absent, fall back to the
+            # default cruise speed.
+            if len(parts) >= 3:
+                try:
+                    new_speed = float(parts[2])
+                    if new_speed != velocidad_crucero:
+                        velocidad_crucero = new_speed
+                        if dev:
+                            print(f"[car] Cruise speed overridden to {velocidad_crucero:.2f} m/s")
+                except ValueError:
+                    pass
+            else:
+                if velocidad_crucero != VELOCIDAD_CRUCERO_DEFAULT:
+                    velocidad_crucero = VELOCIDAD_CRUCERO_DEFAULT
+                    if dev:
+                        print(f"[car] Cruise speed reset to default {velocidad_crucero:.2f} m/s")
 
             last_message_time = time.time()
 
@@ -254,7 +277,7 @@ while driver.step() != -1:
     # Reduce speed when the vehicle is poorly aligned with the target.
     # alignment = 1 means perfect alignment, 0 means perpendicular/opposite.
     alignment = max(0.0, 1.0 - abs(heading_error) / math.pi)
-    speed_cmd = VELOCIDAD_CRUCERO * alignment
+    speed_cmd = velocidad_crucero * alignment
 
     # If the heading error is very large and the target is close,
     # advance slowly to avoid overshooting the target.

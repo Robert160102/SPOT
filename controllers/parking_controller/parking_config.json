@@ -26,55 +26,55 @@
           "x": 26,
           "y": 74,
           "type": "normal",
-          "priority": 24
+          "priority": 19
         },
         {
           "x": 172,
           "y": 74,
           "type": "normal",
-          "priority": 15
+          "priority": 11
         },
         {
           "x": 171,
           "y": 18,
           "type": "normal",
-          "priority": 14
+          "priority": 8
         },
         {
           "x": 26,
           "y": 18,
           "type": "normal",
-          "priority": 23
+          "priority": 17
         },
         {
           "x": 26,
           "y": 131,
           "type": "normal",
-          "priority": 25
+          "priority": 22
         },
         {
           "x": 169,
           "y": 132,
           "type": "normal",
-          "priority": 16
+          "priority": 13
         },
         {
           "x": 24,
           "y": 188,
           "type": "normal",
-          "priority": 26
+          "priority": 25
         },
         {
           "x": 173,
           "y": 187,
           "type": "normal",
-          "priority": 17
+          "priority": 15
         },
         {
           "x": 171,
           "y": 242,
           "type": "normal",
-          "priority": 19
+          "priority": 20
         },
         {
           "x": 24,
@@ -86,7 +86,7 @@
           "x": 171,
           "y": 299,
           "type": "normal",
-          "priority": 21
+          "priority": 24
         },
         {
           "x": 25,
@@ -98,31 +98,31 @@
           "x": 172,
           "y": 355,
           "type": "normal",
-          "priority": 22
+          "priority": 27
         },
         {
           "x": 25,
           "y": 355,
           "type": "normal",
-          "priority": 30
+          "priority": 31
         },
         {
           "x": 26,
           "y": 411,
           "type": "normal",
-          "priority": 31
+          "priority": 32
         },
         {
           "x": 172,
           "y": 411,
           "type": "normal",
-          "priority": 27
+          "priority": 30
         },
         {
           "x": 363,
           "y": 18,
           "type": "normal",
-          "priority": 4
+          "priority": 3
         },
         {
           "x": 509,
@@ -134,7 +134,7 @@
           "x": 364,
           "y": 74,
           "type": "normal",
-          "priority": 5
+          "priority": 4
         },
         {
           "x": 509,
@@ -146,73 +146,73 @@
           "x": 364,
           "y": 130,
           "type": "normal",
-          "priority": 7
+          "priority": 6
         },
         {
           "x": 509,
           "y": 131,
           "type": "normal",
-          "priority": 3
+          "priority": 5
         },
         {
           "x": 364,
           "y": 186,
           "type": "normal",
-          "priority": 8
+          "priority": 9
         },
         {
           "x": 509,
           "y": 187,
           "type": "normal",
-          "priority": 6
+          "priority": 7
         },
         {
           "x": 363,
           "y": 243,
           "type": "normal",
-          "priority": 10
+          "priority": 12
         },
         {
           "x": 508,
           "y": 242,
           "type": "normal",
-          "priority": 9
+          "priority": 10
         },
         {
           "x": 364,
           "y": 299,
           "type": "normal",
-          "priority": 12
+          "priority": 16
         },
         {
           "x": 509,
           "y": 298,
           "type": "normal",
-          "priority": 11
+          "priority": 14
         },
         {
           "x": 365,
           "y": 356,
           "type": "normal",
-          "priority": 18
+          "priority": 21
         },
         {
           "x": 510,
           "y": 355,
           "type": "normal",
-          "priority": 13
+          "priority": 18
         },
         {
           "x": 363,
           "y": 411,
           "type": "normal",
-          "priority": 20
+          "priority": 26
         },
         {
           "x": 509,
           "y": 411,
           "type": "normal",
-          "priority": 32
+          "priority": 23
         }
       ]
     },
@@ -242,31 +242,31 @@
           "x": 95,
           "y": 373,
           "type": "normal",
-          "priority": 17
+          "priority": 20
         },
         {
           "x": 154,
           "y": 374,
           "type": "electric",
-          "priority": 14
+          "priority": 17
         },
         {
           "x": 210,
           "y": 373,
           "type": "electric",
-          "priority": 9
+          "priority": 13
         },
         {
           "x": 265,
           "y": 373,
           "type": "handicap",
-          "priority": 7
+          "priority": 9
         },
         {
           "x": 321,
           "y": 372,
           "type": "handicap",
-          "priority": 5
+          "priority": 6
         },
         {
           "x": 377,
@@ -296,13 +296,13 @@
           "x": 153,
           "y": 190,
           "type": "normal",
-          "priority": 19
+          "priority": 18
         },
         {
           "x": 210,
           "y": 189,
           "type": "electric",
-          "priority": 13
+          "priority": 15
         },
         {
           "x": 265,
@@ -314,19 +314,19 @@
           "x": 323,
           "y": 187,
           "type": "electric",
-          "priority": 11
+          "priority": 8
         },
         {
           "x": 378,
           "y": 187,
           "type": "handicap",
-          "priority": 8
+          "priority": 7
         },
         {
           "x": 434,
           "y": 189,
           "type": "handicap",
-          "priority": 6
+          "priority": 5
         },
         {
           "x": 490,
@@ -338,49 +338,49 @@
           "x": 489,
           "y": 0,
           "type": "normal",
-          "priority": 18
+          "priority": 10
         },
         {
           "x": 434,
           "y": 0,
           "type": "normal",
-          "priority": 20
+          "priority": 11
         },
         {
           "x": 376,
           "y": 2,
           "type": "normal",
-          "priority": 21
+          "priority": 14
         },
         {
           "x": 321,
           "y": 3,
           "type": "normal",
-          "priority": 23
+          "priority": 16
         },
         {
           "x": 264,
           "y": 1,
           "type": "normal",
-          "priority": 24
+          "priority": 19
         },
         {
           "x": 208,
           "y": 0,
           "type": "electric",
-          "priority": 15
+          "priority": 21
         },
         {
           "x": 154,
           "y": 0,
           "type": "electric",
-          "priority": 16
+          "priority": 23
         },
         {
           "x": 95,
           "y": 1,
           "type": "electric",
-          "priority": 10
+          "priority": 24
         }
       ]
     },
@@ -416,13 +416,13 @@
           "x": 69,
           "y": 102,
           "type": "handicap",
-          "priority": 11
+          "priority": 10
         },
         {
           "x": 69,
           "y": 172,
           "type": "handicap",
-          "priority": 10
+          "priority": 8
         },
         {
           "x": 69,
@@ -434,25 +434,25 @@
           "x": 69,
           "y": 313,
           "type": "handicap",
-          "priority": 5
+          "priority": 4
         },
         {
           "x": 71,
           "y": 383,
           "type": "handicap",
-          "priority": 4
+          "priority": 3
         },
         {
           "x": 393,
           "y": 32,
           "type": "handicap",
-          "priority": 9
+          "priority": 11
         },
         {
           "x": 393,
           "y": 102,
           "type": "handicap",
-          "priority": 8
+          "priority": 9
         },
         {
           "x": 393,
@@ -464,7 +464,7 @@
           "x": 393,
           "y": 244,
           "type": "handicap",
-          "priority": 3
+          "priority": 5
         },
         {
           "x": 393,
@@ -506,7 +506,7 @@
           "x": 115,
           "y": 37,
           "type": "electric",
-          "priority": 9
+          "priority": 11
         },
         {
           "x": 115,
@@ -518,13 +518,13 @@
           "x": 114,
           "y": 178,
           "type": "electric",
-          "priority": 7
+          "priority": 6
         },
         {
           "x": 115,
           "y": 248,
           "type": "electric",
-          "priority": 3
+          "priority": 4
         },
         {
           "x": 115,
@@ -542,37 +542,37 @@
           "x": 439,
           "y": 389,
           "type": "electric",
-          "priority": 12
+          "priority": 3
         },
         {
           "x": 439,
           "y": 318,
           "type": "electric",
-          "priority": 11
+          "priority": 5
         },
         {
           "x": 441,
           "y": 247,
           "type": "electric",
-          "priority": 10
+          "priority": 7
         },
         {
           "x": 440,
           "y": 178,
           "type": "electric",
-          "priority": 6
+          "priority": 9
         },
         {
           "x": 438,
           "y": 108,
           "type": "electric",
-          "priority": 5
+          "priority": 10
         },
         {
           "x": 440,
           "y": 37,
           "type": "electric",
-          "priority": 4
+          "priority": 12
         }
       ]
     }

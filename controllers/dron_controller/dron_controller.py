@@ -6,9 +6,14 @@ a Webots Receiver node on channel 2. Once the mission is armed, the drone follow
 the waypoint sequence and acts as the leading agent for the guided parking demo.
 
 If no waypoints are available, the drone remains inactive on the ground. During
-an active mission, the controller also monitors the distance to the vehicle. If
-the vehicle is lost, the mission is aborted and the drone returns to its home
-position.
+an active mission, the controller monitors the vehicle in two ways:
+  - distance check: if the car falls more than MAX_CAR_DISTANCE m behind, the
+    mission is aborted (vehicle lost / car stopped).
+  - overtake check: if the car projects ahead of the drone along the current
+    travel direction for more than OVERTAKE_DEBOUNCE seconds, the mission is
+    also aborted (the car is no longer following the drone).
+In both cases the drone emits a "mission_aborted" event on channel 3 so the
+supervisor can free the reserved spot, and it returns to its home position.
 """
 
 from controller import Supervisor
@@ -26,6 +31,28 @@ dev = True
 
 # Minimum altitude used when the drone is idle or returning to base.
 HOME_ALT_MIN = 0.5
+
+# Maximum allowed horizontal distance between drone and vehicle during a
+# mission. If the car falls further behind than this, the mission is aborted.
+MAX_CAR_DISTANCE = 25.0
+
+# Overtake detection: if the projection of the car position on the drone
+# forward direction is greater than this value (in meters), the car is
+# considered to be ahead of the drone along the planned route.
+OVERTAKE_AHEAD_THRESHOLD = 3.0
+
+# Number of seconds the overtake condition must hold before triggering the
+# abort. This debounce avoids false positives at start-up and during turns.
+OVERTAKE_DEBOUNCE = 1.0
+
+# Horizontal distance (meters) at which the drone considers it has reached
+# the car for the first time during this mission. Until this happens, the
+# overtake detection is disabled. This is needed because the car starts at
+# access_south (already on the route) while the drone starts at home behind
+# it, so at mission arming the car geometrically projects ahead of the drone.
+# Once the drone catches up to the car this close, leader-follower behavior
+# becomes meaningful and overtake detection can start.
+OVERTAKE_ARM_DISTANCE = 3.0
 
 
 def clamp(value, value_min, value_max):
@@ -101,6 +128,12 @@ class Mavic(Supervisor):
         else:
             print("[drone] Warning: receiver device not found. No waypoint missions will be received.")
 
+        # Emitter used to send drone events (e.g., mission_aborted) back to the
+        # supervisor on channel 3.
+        self.emitter_supervisor = self.getDevice("emitter_supervisor")
+        if self.emitter_supervisor is None:
+            print("[drone] Warning: emitter_supervisor device not found. Drone events will not be sent.")
+
         # =========================
         # ACTUATOR INITIALIZATION
         # =========================
@@ -143,6 +176,57 @@ class Mavic(Supervisor):
 
         # Home position is stored once the simulation provides a valid GPS value.
         self.home_position = None
+
+        # Timestamp at which the overtake condition started being true. Set to
+        # None when the car is not currently projecting ahead of the drone.
+        self.overtake_start_time = None
+
+        # Latch flag. The overtake detection only runs after the drone has
+        # been ahead of the car at least once during this mission.
+        self.overtake_detection_armed = False
+
+    def send_event(self, payload):
+        """
+        Send a JSON event to the supervisor through the dedicated emitter.
+        """
+        if self.emitter_supervisor is None:
+            return
+
+        try:
+            self.emitter_supervisor.send(json.dumps(payload).encode('utf-8'))
+        except Exception as e:
+            print(f"[drone] Failed to send event: {e}")
+
+    def car_projection_ahead(self, x_pos, y_pos):
+        """
+        Return the projection (in meters) of the car position on the drone
+        forward direction, along the path towards the next waypoint.
+
+        Positive values mean the car is ahead of the drone. Negative values
+        mean the car is behind. Returns None when the projection cannot be
+        evaluated (no waypoints, last waypoint reached, or degenerate vector).
+        """
+        if self.car_node is None or not self.waypoints:
+            return None
+
+        if self.target_index >= len(self.waypoints):
+            return None
+
+        target_x = self.target_position[0]
+        target_y = self.target_position[1]
+
+        forward_x = target_x - x_pos
+        forward_y = target_y - y_pos
+        forward_norm = np.sqrt(forward_x ** 2 + forward_y ** 2)
+
+        if forward_norm < 1e-3:
+            return None
+
+        car_position = self.car_node.getPosition()
+        rel_x = car_position[0] - x_pos
+        rel_y = car_position[1] - y_pos
+
+        return (rel_x * forward_x + rel_y * forward_y) / forward_norm
 
     def set_position(self, pos):
         """
@@ -318,9 +402,15 @@ class Mavic(Supervisor):
             # C. SAFETY MONITORING
             # =========================
 
-            # During an active mission, monitor the distance between the drone
-            # and the vehicle. If the car is too far away, the drone assumes
-            # the vehicle has been lost and aborts the mission.
+            # During an active mission, monitor the vehicle in two ways:
+            #   - distance: if the car falls more than MAX_CAR_DISTANCE m
+            #     behind, the mission is aborted (vehicle lost / car stopped).
+            #   - overtake: if the projection of the car position along the
+            #     drone forward direction exceeds OVERTAKE_AHEAD_THRESHOLD for
+            #     OVERTAKE_DEBOUNCE seconds, the mission is aborted (the car
+            #     is not following the drone anymore).
+            abort_reason = None
+
             if self.waypoints and self.car_node and mission_armed and not mission_aborted:
                 car_position = self.car_node.getPosition()
                 car_distance = np.sqrt(
@@ -328,34 +418,76 @@ class Mavic(Supervisor):
                     (car_position[1] - y_pos) ** 2
                 )
 
-                MAX_CAR_DISTANCE = 25.0
-
                 if car_distance > MAX_CAR_DISTANCE:
                     print(f"[drone] Alert: vehicle lost at {car_distance:.1f} m. Aborting mission.")
-                    mission_aborted = True
+                    abort_reason = "car_lost"
 
-                    # Emergency waypoint 1: return to base while preserving
-                    # the current flight altitude.
-                    return_wp = [
-                        self.home_position[0],
-                        self.home_position[1],
-                        self.target_altitude
-                    ]
+                else:
+                    projection = self.car_projection_ahead(x_pos, y_pos)
+                    now_t = self.getTime()
 
-                    # Emergency waypoint 2: descend once the drone is above base.
-                    landing_wp = [
-                        self.home_position[0],
-                        self.home_position[1],
-                        HOME_ALT_MIN
-                    ]
+                    # Arm overtake detection only after the drone has caught
+                    # up with the car (distance below OVERTAKE_ARM_DISTANCE).
+                    # This avoids false positives at start-up, where the car
+                    # waits at access_south while the drone is still at home
+                    # behind it.
+                    if (
+                        not self.overtake_detection_armed
+                        and car_distance < OVERTAKE_ARM_DISTANCE
+                    ):
+                        self.overtake_detection_armed = True
+                        print(
+                            f"[drone] Overtake detection armed "
+                            f"(distance to car {car_distance:.2f} m)."
+                        )
 
-                    # Replace the original mission with the emergency route.
-                    self.waypoints = [return_wp, landing_wp]
-                    self.target_index = 0
+                    if (
+                        self.overtake_detection_armed
+                        and projection is not None
+                        and projection > OVERTAKE_AHEAD_THRESHOLD
+                    ):
+                        if self.overtake_start_time is None:
+                            self.overtake_start_time = now_t
+                        elif now_t - self.overtake_start_time >= OVERTAKE_DEBOUNCE:
+                            print(
+                                f"[drone] Alert: vehicle overtook the drone "
+                                f"(projection={projection:.1f} m). Aborting mission."
+                            )
+                            abort_reason = "car_overtake"
+                    else:
+                        self.overtake_start_time = None
 
-                    self.target_position[0] = return_wp[0]
-                    self.target_position[1] = return_wp[1]
-                    self.target_altitude = return_wp[2]
+            if abort_reason is not None:
+                mission_aborted = True
+
+                self.send_event({
+                    "type": "mission_aborted",
+                    "reason": abort_reason,
+                    "time": self.getTime(),
+                })
+
+                # Emergency waypoint 1: return to base while preserving
+                # the current flight altitude.
+                return_wp = [
+                    self.home_position[0],
+                    self.home_position[1],
+                    self.target_altitude
+                ]
+
+                # Emergency waypoint 2: descend once the drone is above base.
+                landing_wp = [
+                    self.home_position[0],
+                    self.home_position[1],
+                    HOME_ALT_MIN
+                ]
+
+                # Replace the original mission with the emergency route.
+                self.waypoints = [return_wp, landing_wp]
+                self.target_index = 0
+
+                self.target_position[0] = return_wp[0]
+                self.target_position[1] = return_wp[1]
+                self.target_altitude = return_wp[2]
 
             # =========================
             # D. IDLE / MISSION CONTROL

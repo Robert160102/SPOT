@@ -141,7 +141,7 @@
 
         const zonesData = [
           { id: "A", features: ["normal"] },
-          { id: "B", features: ["electric", "handicap"] },
+          { id: "B", features: ["normal", "electric", "handicap"] },
           { id: "C", features: ["handicap"] },
           { id: "D", features: ["electric"] },
         ];
@@ -174,7 +174,8 @@
             const colorClass = getOccupancyColorClass(free, total);
             const isSelected = selectedZoneId === zone.id;
             const isDisabled = free === 0;
-            let isFaded = activeFilter && !zone.features.includes(activeFilter);
+            const requiredFeature = activeFilter || "normal";
+            let isFaded = !zone.features.includes(requiredFeature);
 
             const zoneEl = document.createElement("div");
             zoneEl.className = `parking-zone flex flex-col items-center justify-center ${isSelected ? "zone-selected" : ""} ${isFaded ? "opacity-20 bg-gray-200" : ""} ${isDisabled ? "zone-disabled" : ""}`;
